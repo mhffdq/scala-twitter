@@ -11,6 +11,7 @@ class Listener extends StatusAdapter {
     if(status.getLang=="ja"&& status.isRetweet) {
       println(status.getUser)
       println(status.getRetweetedStatus.getUser)
+      println(status.getRetweetedStatus.getRetweetCount())
       println()
     }
   }

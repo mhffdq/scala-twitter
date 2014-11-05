@@ -13,7 +13,7 @@ import twitter4j._
 import twitter4j.auth.AccessToken
 object core {
   def main(args:Array[String]): Unit ={
-    twitterstream()
+    twitop()
   }
   def twitop(): Unit ={
     val twitter = TwitterFactory.getSingleton
