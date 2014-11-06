@@ -1,5 +1,7 @@
 package com.jr2jme.twitterlda
 
+import twitter4j.conf.ConfigurationBuilder
+
 import scala.collection.JavaConversions._
 import java.io.{File, BufferedReader, StringReader}
 import java.security.{MessageDigest => MD}
@@ -7,18 +9,16 @@ import java.util
 
 import net.java.sen.SenFactory
 import net.java.sen.filter.stream.CompositeTokenFilter
-import twitter4j.TwitterFactory
+import twitter4j._
 import twitter4j.auth.AccessToken
-import twitter4j.Paging
-import twitter4j.Trend
 object core {
   def main(args:Array[String]): Unit ={
-    twitfavorite()
+    twitfavorite("NAGO_System")
   }
   def twitop(): Unit ={
     val twitter = TwitterFactory.getSingleton
-    val accessToken = new AccessToken("231278203-xwHCN8Mua7953jFu1r8BJcojCblojQLHkAX9D0es","t7PDmD9ijvcRQH3kDSqXre8lqHWyxNc5gxgI5j3Y")
-    twitter.setOAuthConsumer("3nVuSoBZnx6U4vzUxf5w","Bcs59EFbbsdF6Sl9Ng71smgStWEGwXXKSjYvPVt7qys")
+    val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
+    twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
     twitter.setOAuthAccessToken(accessToken)
     val username = "JME_KH"
     //val statuses = twitter.getUserTimeline(username,new Paging(1,100))
@@ -66,22 +66,76 @@ object core {
     //println(user.g)
   }
 
-  def twitfavorite(): Unit ={
+  def twitfavorite(username:String): Unit ={
     val twitter = TwitterFactory.getSingleton
-    val accessToken = new AccessToken(key.consumer,key.conssecret)
-    twitter.setOAuthConsumer(key.oauth,key.oauthsecret)
+    val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
+    twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
     twitter.setOAuthAccessToken(accessToken)
-    val username = "eiitirou"
+    //val username = "eiitirou"
     val statuses = twitter.getUserTimeline(username,new Paging(1,100))
+    var retflag = false
+    var prevtext = ""
     statuses.foreach(s=>{
-      val flag = s.getRetweetedStatus
-      if(flag!=null){
-        println(flag.getText)
+
+      val retweet = s.getRetweetedStatus
+
+      if(retweet!=null){
+        //val trueretweet=twitter.showStatus(retweet.getId)
+        println(retweet.getText)
+        println(retweet.getFavoriteCount)
+        println(retweet.getRetweetCount)
+        val count=retweet.getFavoriteCount+retweet.getRetweetCount
+        println(prevtext)
+        println
       }
+      prevtext=s.getText
+      /*if(s.getInReplyToStatusId!= -1){
+        twitter.lookupUsers(Array(s.getInReplyToUserId)).foreach(user=> {
+          if(!user.isProtected){
+            val reply = twitter.showStatus(s.getInReplyToStatusId)
+            /*println(reply.getText)
+            println(reply.getFavoriteCount)
+            println(reply.getRetweetCount)*/
+            val count=reply.getFavoriteCount+reply.getRetweetCount
+            if(count>10){
+              println(s.getText)
+              println(reply.getText+count)
+              println
+            }
+          }
+        })
+      }*/
     })
     println()
-    twitter.getFavorites(username).foreach(s=>println(s.getText))
+    /*twitter.getFavorites(username).foreach(s=>{
+      println(s.getText)
+      println(s.getFavoriteCount)
+      println(s.getRetweetCount)
+    })*/
 
+
+  }
+
+  def twitterstream():Unit={
+    val builder = new ConfigurationBuilder()
+    builder.setOAuthConsumerKey(mykey.consumer)
+    builder.setOAuthConsumerSecret(mykey.conssecret)
+    builder.setOAuthAccessToken(mykey.token)
+    builder.setOAuthAccessTokenSecret(mykey.tokensecret)
+
+    val conf = builder.build()
+
+    // TwitterStreamのインスタンス作成
+    val twitterStream = new TwitterStreamFactory(conf).getInstance()
+
+    // Listenerを登録
+    twitterStream.addListener(new Listener())
+    val track = Array("http" )
+    val filter = new FilterQuery()
+    filter.track(track)
+    filter.language(Array("ja"))
+    // 実行
+    twitterStream.filter(filter)
   }
 
   def md5hash(str:String): Unit ={
