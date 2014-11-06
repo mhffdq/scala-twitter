@@ -13,7 +13,7 @@ import twitter4j._
 import twitter4j.auth.AccessToken
 object core {
   def main(args:Array[String]): Unit ={
-    twitop()
+    twitfavorite("NAGO_System")
   }
   def twitop(): Unit ={
     val twitter = TwitterFactory.getSingleton
@@ -66,21 +66,53 @@ object core {
     //println(user.g)
   }
 
-  def twitfavorite(): Unit ={
+  def twitfavorite(username:String): Unit ={
     val twitter = TwitterFactory.getSingleton
     val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
     twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
     twitter.setOAuthAccessToken(accessToken)
-    val username = "eiitirou"
+    //val username = "eiitirou"
     val statuses = twitter.getUserTimeline(username,new Paging(1,100))
+    var retflag = false
+    var prevtext = ""
     statuses.foreach(s=>{
-      val flag = s.getRetweetedStatus
-      if(flag!=null){
-        println(flag.getText)
+
+      val retweet = s.getRetweetedStatus
+
+      if(retweet!=null){
+        //val trueretweet=twitter.showStatus(retweet.getId)
+        println(retweet.getText)
+        println(retweet.getFavoriteCount)
+        println(retweet.getRetweetCount)
+        val count=retweet.getFavoriteCount+retweet.getRetweetCount
+        println(prevtext)
+        println
       }
+      prevtext=s.getText
+      /*if(s.getInReplyToStatusId!= -1){
+        twitter.lookupUsers(Array(s.getInReplyToUserId)).foreach(user=> {
+          if(!user.isProtected){
+            val reply = twitter.showStatus(s.getInReplyToStatusId)
+            /*println(reply.getText)
+            println(reply.getFavoriteCount)
+            println(reply.getRetweetCount)*/
+            val count=reply.getFavoriteCount+reply.getRetweetCount
+            if(count>10){
+              println(s.getText)
+              println(reply.getText+count)
+              println
+            }
+          }
+        })
+      }*/
     })
     println()
-    twitter.getFavorites(username).foreach(s=>println(s.getText))
+    /*twitter.getFavorites(username).foreach(s=>{
+      println(s.getText)
+      println(s.getFavoriteCount)
+      println(s.getRetweetCount)
+    })*/
+
 
   }
 
