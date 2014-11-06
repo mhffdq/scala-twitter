@@ -13,7 +13,7 @@ import twitter4j._
 import twitter4j.auth.AccessToken
 object core {
   def main(args:Array[String]): Unit ={
-    twitfavorite("NAGO_System")
+    twitterstream()
   }
   def twitop(): Unit ={
     val twitter = TwitterFactory.getSingleton
@@ -75,38 +75,43 @@ object core {
     val statuses = twitter.getUserTimeline(username,new Paging(1,100))
     var retflag = false
     var prevtext = ""
+    var getcount=1.00d
+    var sousin=1.0d
     statuses.foreach(s=>{
-
+      if(s.getRetweetCount+s.getFavoriteCount>2){
+        sousin+=1
+      }
       val retweet = s.getRetweetedStatus
 
       if(retweet!=null){
         //val trueretweet=twitter.showStatus(retweet.getId)
-        println(retweet.getText)
-        println(retweet.getFavoriteCount)
-        println(retweet.getRetweetCount)
+        //println(retweet.getText)
+        //println(retweet.getFavoriteCount)
+       // println(retweet.getRetweetCount)
         val count=retweet.getFavoriteCount+retweet.getRetweetCount
-        println(prevtext)
-        println
+        //println(prevtext)
+        //println
+        getcount+=1.0
       }
       prevtext=s.getText
-      /*if(s.getInReplyToStatusId!= -1){
+      if(s.getInReplyToStatusId!= -1){
         twitter.lookupUsers(Array(s.getInReplyToUserId)).foreach(user=> {
           if(!user.isProtected){
             val reply = twitter.showStatus(s.getInReplyToStatusId)
-            /*println(reply.getText)
-            println(reply.getFavoriteCount)
-            println(reply.getRetweetCount)*/
             val count=reply.getFavoriteCount+reply.getRetweetCount
             if(count>10){
-              println(s.getText)
-              println(reply.getText+count)
-              println
+             // println(s.getText)
+              //println(reply.getText+count)
+              //println
+              getcount+=1.0
             }
           }
         })
-      }*/
+      }
     })
     println()
+    println(getcount/sousin)
+
     /*twitter.getFavorites(username).foreach(s=>{
       println(s.getText)
       println(s.getFavoriteCount)
@@ -130,7 +135,7 @@ object core {
 
     // Listenerを登録
     twitterStream.addListener(new Listener())
-    val track = Array("http" )
+    val track = Array("#ore_twi" )
     val filter = new FilterQuery()
     filter.track(track)
     filter.language(Array("ja"))
