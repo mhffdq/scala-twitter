@@ -1,11 +1,11 @@
 package com.jr2jme.twitterlda
 
+import net.java.sen.dictionary.Token
 import twitter4j.conf.ConfigurationBuilder
 
 import scala.collection.JavaConversions._
 import java.io.{File, BufferedReader, StringReader}
 import java.security.{MessageDigest => MD}
-import java.util
 
 import net.java.sen.SenFactory
 import net.java.sen.filter.stream.CompositeTokenFilter
@@ -15,12 +15,45 @@ object core {
   def main(args:Array[String]): Unit ={
     twitterstream()
   }
-  def twitop(): Unit ={
+
+  def twitreco(username:String):Unit = {
+    val twitter = TwitterFactory.getSingleton
+    val accessToken = new AccessToken(mykey.token,mykey.tokensecret)
+    twitter.setOAuthConsumer(mykey.consumer,mykey.conssecret)
+    twitter.setOAuthAccessToken(accessToken)
+
+    val listlist = twitter.getUserLists(username)
+    var notexistlist=true
+    var listid=0L
+    for(list<-listlist){
+      if(list.getName==username){
+        notexistlist=false
+        listid=list.getId
+      }
+    }
+    val tagger = SenFactory.getStringTagger(null)
+    val ctFillter = new CompositeTokenFilter
+    //val newFile = new File(username)
+    val wordcount=twitter.getUserListStatuses(listid,new Paging(1,100)).foldLeft(Map.empty[String,Int])((map,s)=>{
+      //println(s.getText)
+
+      //newFile.mkdir() //成功すればtrue, 失敗すればfalseが返る。
+      ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
+      tagger.addFilter(ctFillter)
+      ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
+      tagger.addFilter(ctFillter)
+
+      val tokens = tagger.analyze(s.getText,new java.util.ArrayList[Token]())
+      tokens.foldLeft(map)((minimap,minis)=>minimap+(minis.getSurface->(minimap.getOrElse(minis.getSurface,0)+1)))
+    })
+    wordcount.toSeq.sortWith(_._2 > _._2).foreach(println)
+  }
+
+  def twitlistupdate(username : String): Unit ={
     val twitter = TwitterFactory.getSingleton
     val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
     twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
     twitter.setOAuthAccessToken(accessToken)
-    val username = "JME_KH"
     //val statuses = twitter.getUserTimeline(username,new Paging(1,100))
     val listlist = twitter.getUserLists(username)
     var notexistlist=true
@@ -40,14 +73,8 @@ object core {
     followmemberid.diff(listmembersid).foreach(twitter.createUserListMember(listid,_))
     //val listid = twitter.createUserList(username,false,"").getId
     //twitter.getFriendsIDs(username,-1).getIDs.foreach(twitter.createUserListMember(listid,_))
-    val tagger = SenFactory.getStringTagger(null)
-    val ctFillter = new CompositeTokenFilter
-    val newFile = new File(username)
-    newFile.mkdir() //成功すればtrue, 失敗すればfalseが返る。
-    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
-    tagger.addFilter(ctFillter)
-    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
-    tagger.addFilter(ctFillter)
+
+
     //twitter.getHomeTimeline.foreach(s=>println(s.getText))
     //for(s<-statuses){
       //println(s.getText)
@@ -78,7 +105,7 @@ object core {
     var getcount=1.00d
     var sousin=1.0d
     statuses.foreach(s=>{
-      if(s.getRetweetCount+s.getFavoriteCount>2){
+      if((!s.isRetweet)&&(s.getRetweetCount+s.getFavoriteCount)>2){
         sousin+=1
       }
       val retweet = s.getRetweetedStatus
@@ -94,7 +121,7 @@ object core {
         getcount+=1.0
       }
       prevtext=s.getText
-      if(s.getInReplyToStatusId!= -1){
+      /*if(s.getInReplyToStatusId!= -1){
         twitter.lookupUsers(Array(s.getInReplyToUserId)).foreach(user=> {
           if(!user.isProtected){
             val reply = twitter.showStatus(s.getInReplyToStatusId)
@@ -107,7 +134,7 @@ object core {
             }
           }
         })
-      }
+      }*/
     })
     println()
     println(getcount/sousin)
@@ -128,7 +155,6 @@ object core {
     twitter.setOAuthAccessToken(accessToken)
     val trends = twitter.getPlaceTrends(23424856)
     val trend=trends.getTrends
-    trend.foreach(x=>println(x.getName))
     val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
     val builder = new ConfigurationBuilder()
     builder.setOAuthConsumerKey(mykey.consumer)
