@@ -122,6 +122,14 @@ object core {
   }
 
   def twitterstream():Unit={
+    val twitter = TwitterFactory.getSingleton
+    val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
+    twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
+    twitter.setOAuthAccessToken(accessToken)
+    val trends = twitter.getPlaceTrends(23424856)
+    val trend=trends.getTrends
+    trend.foreach(x=>println(x.getName))
+    val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
     val builder = new ConfigurationBuilder()
     builder.setOAuthConsumerKey(mykey.consumer)
     builder.setOAuthConsumerSecret(mykey.conssecret)
@@ -135,9 +143,9 @@ object core {
 
     // Listenerを登録
     twitterStream.addListener(new Listener())
-    val track = Array("#ore_twi" )
+
     val filter = new FilterQuery()
-    filter.track(track)
+    filter.track(qe)
     filter.language(Array("ja"))
     // 実行
     twitterStream.filter(filter)
