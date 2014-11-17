@@ -8,7 +8,7 @@ import twitter4j.{Status, StatusAdapter}
 class Listener extends StatusAdapter {
   // Tweetを受け取るたびにこのメソッドが呼び出される
   override def onStatus(status:Status):Unit= {
-    if(!status.isRetweet) {
+    if(true) {
       println(status.getText)
 
       println()

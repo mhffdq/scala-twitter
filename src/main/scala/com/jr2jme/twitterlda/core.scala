@@ -1,19 +1,136 @@
 package com.jr2jme.twitterlda
 
+import dispatch._
 import net.java.sen.dictionary.Token
 import twitter4j.conf.ConfigurationBuilder
 
 import scala.collection.JavaConversions._
-import java.io.{File, BufferedReader, StringReader}
+import java.io.{FileReader, File, BufferedReader, StringReader}
 import java.security.{MessageDigest => MD}
 
 import net.java.sen.SenFactory
 import net.java.sen.filter.stream.CompositeTokenFilter
 import twitter4j._
 import twitter4j.auth.AccessToken
+
+
 object core {
+  def open(fileName:String)(body:BufferedReader => Unit) : Unit = {
+    // ディスクへの細かなアクセスを避けるため、バッファを介してファイルを読む
+    val in = new BufferedReader(new FileReader(fileName))
+    try
+      body(in)
+    finally
+      in.close  // 開けたら閉じる
+  }
+
+
   def main(args:Array[String]): Unit ={
-    twitterstream()
+    val tweets = getusertweet("renho_sha")
+    println(tweets.length)
+    val dicmap = readdic_kobayashi()
+
+    tweets.foreach(s=>{
+
+      if(s.getText.contains("補正予算")) {
+        println(getnegaposi(s, dicmap) + s.getText)
+      }
+    })
+  }
+  def getnegaposi(tweet:Status,dicmap:Map[String,Double]) : Double = {
+    val text = tweet.getText
+    val tagger = SenFactory.getStringTagger(null)
+    val ctFillter = new CompositeTokenFilter
+    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
+    tagger.addFilter(ctFillter)
+    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
+    tagger.addFilter(ctFillter)
+    val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
+    tokens.foldLeft(0d)((va,tok)=>{
+      va+dicmap.getOrElse(tok.getSurface,0d)//0でないやつの数を数えたい
+    })/tokens.size()
+  }
+  def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
+    //for(line <- Source.fromFile("").getLines) {println(line)}
+    var map=Map.empty[String,Double]
+    open("pn_ja-utf.dic") { f =>
+      def loop():Map[String,Double] ={
+
+        var line = f.readLine  // 一行ずつ読む
+        while(line != null){  // nullが返ると読み込み終了
+          // use read data here
+          val linearray=line.split(":")
+          //println(linearray(0)+" : "+linearray(3))
+          //println(map.size)
+          map=map+(linearray(0)->linearray(3).toDouble)
+          line=f.readLine()
+        }
+        map
+      }
+      loop
+    }
+  map
+  }
+  def readdic_kobayashi(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
+  //for(line <- Source.fromFile("").getLines) {println(line)}
+  var map=Map.empty[String,Double]
+    open("wago.121808.pn") { f =>
+      def loop():Map[String,Double] ={
+
+        var line = f.readLine  // 一行ずつ読む
+        while(line != null){  // nullが返ると読み込み終了
+        // use read data here
+        val linearray=line.split("\t")
+          //println(linearray(0)+" : "+linearray(3))
+          //println(map.size)
+          //println(linearray(1))
+          val atai=if(linearray(0).startsWith("ネガ")){
+            -1
+          }else{
+            1
+          }
+          map=map+(linearray(1).split(" ")(0)->atai)
+          line=f.readLine()
+        }
+        map
+      }
+      loop
+    }
+    map
+  }
+
+
+  def getusertweet(username:String): ResponseList[Status] ={
+    val twitter = TwitterFactory.getSingleton
+    val accessToken = new AccessToken(mykey.token,mykey.tokensecret)
+    twitter.setOAuthConsumer(mykey.consumer,mykey.conssecret)
+    twitter.setOAuthAccessToken(accessToken)
+    //(1 to 10).fold(Seq.empty[ResponseList[Status]])((pnumber,list)=> list:+twitter.getUserTimeline(username, new Paging(1, 100)))
+    var tweets:ResponseList[Status]=null
+    for(s<-(1 to 10)) {
+      if(tweets==null){
+        tweets=twitter.getUserTimeline(username, new Paging(s, 100))
+      }
+      else{
+        twitter.getUserTimeline(username, new Paging(s, 100)).foreach(x=>tweets.add(x))
+      }
+    }
+    tweets
+  }
+  def gettogepage():Unit = {
+   /* val urlori="http://togetter.com/api/moreTweets/"+742165
+    val http = new Http
+    val request = url(urlori)
+    val requestWithParams =
+      request
+        .POST
+        .addParameter("page", "1")
+        .addParameter("key", "")
+    val req = :/("api.tumblr.com") / "v2" / "blog" / "pab-tech.tumblr.com" / "avatar"
+    //val handler = req >>> new java.io.FileOutputStream("cat.png")
+    http(requestWithParams)
+*/
+
   }
 
   def twitreco(username:String):Unit = {
@@ -33,16 +150,15 @@ object core {
     }
     val tagger = SenFactory.getStringTagger(null)
     val ctFillter = new CompositeTokenFilter
+    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
+    tagger.addFilter(ctFillter)
+    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
+    tagger.addFilter(ctFillter)
+
     //val newFile = new File(username)
     val wordcount=twitter.getUserListStatuses(listid,new Paging(1,100)).foldLeft(Map.empty[String,Int])((map,s)=>{
       //println(s.getText)
-
       //newFile.mkdir() //成功すればtrue, 失敗すればfalseが返る。
-      ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
-      tagger.addFilter(ctFillter)
-      ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
-      tagger.addFilter(ctFillter)
-
       val tokens = tagger.analyze(s.getText,new java.util.ArrayList[Token]())
       tokens.foldLeft(map)((minimap,minis)=>minimap+(minis.getSurface->(minimap.getOrElse(minis.getSurface,0)+1)))
     })
@@ -139,11 +255,11 @@ object core {
     println()
     println(getcount/sousin)
 
-    /*twitter.getFavorites(username).foreach(s=>{
+    twitter.getFavorites(username).foreach(s=>{
       println(s.getText)
       println(s.getFavoriteCount)
       println(s.getRetweetCount)
-    })*/
+    })
 
 
   }
@@ -153,9 +269,11 @@ object core {
     val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
     twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
     twitter.setOAuthAccessToken(accessToken)
-    val trends = twitter.getPlaceTrends(23424856)
-    val trend=trends.getTrends
-    val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
+    //val trends = twitter.getPlaceTrends(23424856)
+    //val trend=trends.getTrends
+    //val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
+    val qe = Array("amazon")
+
     val builder = new ConfigurationBuilder()
     builder.setOAuthConsumerKey(mykey.consumer)
     builder.setOAuthConsumerSecret(mykey.conssecret)
