@@ -1,6 +1,7 @@
 package com.jr2jme.twitterlda
 
 import java.util.Random
+import scala.io.Source
 import scala.math
 import chalk.topics.LDA
 import dispatch._
@@ -21,9 +22,9 @@ import org.knowceans.topics.simple.{TopicMatrixPanel, IldaGibbs}
 
 object core {
   val twitter = TwitterFactory.getSingleton
-  val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
   val tagger = SenFactory.getStringTagger(null)
   val ctFillter = new CompositeTokenFilter
+  var objtwts:ResponseList[Status] = null
 
   def open(fileName:String)(body:BufferedReader => Unit) : Unit = {
     // ディスクへの細かなアクセスを避けるため、バッファを介してファイルを読む
@@ -46,7 +47,8 @@ object core {
         println(getnegaposi(s, dicmap) + s.getText)
       }
     })*/
-    twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
+    twitter.setOAuthConsumer(botkey.consumer,botkey.conssecret)
+    val accessToken = new AccessToken(botkey.token,botkey.tokensecret)
     twitter.setOAuthAccessToken(accessToken)
     ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
     tagger.addFilter(ctFillter)
@@ -54,11 +56,61 @@ object core {
     tagger.addFilter(ctFillter)
 
     //hdplda(twitlda("JME_KH"))
-    hdplda(twitlda("JME_KH"),"JME_KH")
+    //hdplda(twitlda("renho_sha"))
+    /*var page = new Paging(1,200,1L)
+    for(i<-(1 to 10)) {
+      twitter.getUserTimeline("elephas_Koji", page).foreach(s=>{
+        println(s.getCreatedAt + s.getText)
+        page.setMaxId(s.getId)
+        println(s.getId)
+      })
+    }*/
+    print("input=")
+    val lines = Iterator.continually(readLine()).takeWhile((s=>{
+      s!=null&&s!=""
+    }) )
+    lines.foreach(s=>{
+      if(s!="") {
+        twitsearch(s)
+      }
+    })
+  }
+
+  def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={
+    lstat.foldLeft((Map.empty[Status,Map[String,Int]],idf))((ddd,st)=> {
+      var wordset = Set.empty[String]
+      val tokens = tagger.analyze(st.getText, new java.util.ArrayList[Token]())
+      val twitmap = tokens.foldLeft(Map.empty[String,Int],ddd._2)((konomap, tok) => {
+        val word = tok.getSurface
+
+        if(!wordset.contains(word)){
+          wordset = wordset+word
+          (konomap._1 + (word -> (konomap._1.getOrElse(word, 0) + 1)),konomap._2+(word->(konomap._2.getOrElse(word,0)+1)))
+        }else {
+          (konomap._1 + (word -> (konomap._1.getOrElse(word, 0) + 1)),konomap._2)
+        }
+      })
+      (ddd._1+(st->twitmap._1),twitmap._2)
+    })
+  }
+
+  def twitsearch(word:String): List[Status] ={
+    println("searching")
+    val query = new Query
+    query.setQuery(word)
+    var ser = twitter.search(query)
+    println(ser)
+    ser.getTweets.foreach(s=>println(s))
+    while(ser.nextQuery()!=null){
+      ser = twitter.search(ser.nextQuery())
+      ser.getTweets.foreach(s=>println(s.getText))
+      println(ser.getRefreshURL)
+    }
+    ser.getTweets.toList
   }
 
 
-  def getnegaposi(tweet:Status,dicmap:Map[String,Double]) : Double = {
+  def getnegaposi(tweet:Status,dicmap:Map[String,Double],phi:Array[Array[Double]],topic:Int,wordmap:Map[String,Int]) : Double = {
     val text = tweet.getText
     val tagger = SenFactory.getStringTagger(null)
     val ctFillter = new CompositeTokenFilter
@@ -68,7 +120,12 @@ object core {
     tagger.addFilter(ctFillter)
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
     tokens.foldLeft(0d)((va,tok)=>{
-      va+dicmap.getOrElse(tok.getSurface,0d)//0でないやつの数を数えたい
+      if(topic != -1&&wordmap.contains(tok.getSurface)) {
+        va + (dicmap.getOrElse(tok.getSurface, 0d)/(-Math.log(phi(topic)(wordmap.getOrElse(tok.getSurface, 1)))))
+      }
+      else{
+        va + (dicmap.getOrElse(tok.getSurface, 0d))
+      }//0でないやつの数を数えたい
     })
   }
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
@@ -105,7 +162,7 @@ object core {
           //println(linearray(0)+" : "+linearray(3))
           //println(map.size)
           //println(linearray(1))
-          val atai=if(linearray(0).startsWith("ネガ")){
+          val atai=if(linearray(0).startsWith("ネガ")){//重みはトピックごとに変えないとダメ
             -1
           }else{
             1
@@ -151,7 +208,7 @@ object core {
 
   }
 
-  def hdplda(maaa:Map[String,Int],username:String): Unit ={
+  def hdplda(maaa:Map[String,Int]): Unit ={
     val niter: Int = 50
     val niterq: Int = 10
     val filebase: String = "twitter/twitter"
@@ -219,12 +276,22 @@ object core {
     }
     val phi = gs.getphi()//トピックごとの単語が選ばれる確率
     val theta = gs.gettheta();//文書ごとのトピックが選ばれる確率(見るのはとりあえず一番の人)
-    val objtwts = twitter.getUserTimeline(username, new Paging(1, 100)).foreach(twt=>{
+    var c = 0
+    phi.foreach(topic=>{
+      println("topic="+c)
+      val so = maaa.toSeq.sortWith((a,b)=>topic(a._2)>topic(b._2))
+      for(i <- (0 to 10)){
+        println(so(i)._1+topic(so(i)._2))
+      }
+      println
+      c+=1
+    })
+    val se = objtwts.foldLeft(new Array[Map[Status,Int]](phi.length))((tpse,twt)=>{
         val tok = tagger.analyze(twt.getText,new java.util.ArrayList[Token]())
         var maxi = -1
-        var maxp = 0d
+        var maxp = Double.MinValue
         for(i<-(0 to theta(0).length-1)){
-          val prob = tok.foldLeft(0d)((va,wa)=>{
+          val prob = tok.foldLeft(Math.log(theta(0)(i)))((va,wa)=>{
             val key = maaa.getOrElse(wa.getSurface,-1)
             if(key!= -1){
               va+Math.log(phi(i)(key))//誤差
@@ -234,17 +301,52 @@ object core {
             }
           })
           //println(prob)
-          if(maxp>prob){
+          if(maxp != null) {
+            if (maxp < prob) {
+              maxp = prob
+              maxi = i
+            }
+          }
+          else{
             maxp=prob
-            maxi=i
+            maxi = i
           }
         }
-        println("max topic = "+maxi)//todo 変化
-        if(maxi==0){
-          println(twt.getText)
+        //println("max topic = "+maxi)//todo 変化
+        if(maxi!= -1) {
+          if (tpse(maxi) == null) {
+            tpse(maxi) = Map.empty[Status,Int]
+          }
+          tpse(maxi) = tpse(maxi) + (twt->maxi)
         }
+        tpse
       })
+    var count =0
+    for(i<-se){
+      println("topic"+count)
+      if(i!=null) {
+        for (j <- i) {
+          println(j._1.getCreatedAt+j._1.getText)
+          val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
+            taka+koba
+          })
+          println(getnegaposi(j._1,mixdic,phi,j._2,maaa))//map[Map[Status,Double]]
+        }
+      }
+      println
+      println
+      count+=1
+    }
   }
+
+  /*def wordweight(wordmap:Map[String,Int],phi:Array[Array[Double]]): Map[String,Array[Double]] ={
+    wordmap.foldLeft(Map.empty[String,Double])((ma,i)=>{
+      val hoge = phi.foldLeft(0d)((prob,j)=> {
+        prob-Math.log10(j(i._2))
+      })
+      ma+(i._1->hoge)
+    })
+  }*/
 
   def twitlda(username:String): Map[String,Int]= {
 
@@ -255,7 +357,7 @@ object core {
     val out = new PrintWriter("./twitter/twitter.corpus")
 
     val utweet = (1 to 1).foldLeft(Map.empty[Int, Int])((mmm, s) => {
-      val block = makebog(username,wordmap,s)
+      val block = makebog(username,wordmap,s,true)
       block.foldLeft(mmm)((mal, xx) => {
         mal + (xx._1 -> (mal.getOrElse(xx._1, 0) + xx._2))
       })
@@ -265,11 +367,33 @@ object core {
     utweet.toSeq.sortWith(_._2 > _._2).foreach(s=>out.print(" " + s._1+":"+s._2))
     out.println
 
-    val frlist= twitter.getFriendsList(username,-1)
+    open("username.txt") { f =>
+      def loop():Unit ={
+        var line = f.readLine  // 一行ずつ読む
+        while(line != null) {
+          // nullが返ると読み込み終了
+          // use read data here
+          val usertweet = (1 to 1).foldLeft(Map.empty[Int, Int])((mmm, s) => {
+            val block = makebog(line,wordmap,s,false)
+            block.foldLeft(mmm)((mal, xx) => {
+              mal + (xx._1 -> (mal.getOrElse(xx._1, 0) + xx._2))
+            })
+          })
+          out.print(usertweet.size)
+          usertweet.toSeq.sortWith(_._2 > _._2).foreach(s=>out.print(" " + s._1+":"+s._2))
+          out.println
+          line=f.readLine()
+        }
+      }
+      loop
+    }
+
+
+    /*val frlist= twitter.getFriendsList(username,-1)
     frlist.foreach(s=> {
       val objname = s.getScreenName
       val usertweet = (1 to 1).foldLeft(Map.empty[Int, Int])((mmm, s) => {
-        val block = makebog(objname,wordmap,s)
+        val block = makebog(objname,wordmap,s,false)
         block.foldLeft(mmm)((mal, xx) => {
           mal + (xx._1 -> (mal.getOrElse(xx._1, 0) + xx._2))
         })
@@ -277,7 +401,8 @@ object core {
       out.print(usertweet.size)
       usertweet.toSeq.sortWith(_._2 > _._2).foreach(s=>out.print(" " + s._1+":"+s._2))
       out.println
-    })
+    })*/
+
     /*val frlist2=twitter.getFriendsList(username,frlist.getNextCursor)
     frlist2.foreach(s=> {
       val objname = s.getScreenName
@@ -295,9 +420,13 @@ object core {
     wordmap.toMap
   }
 
-  def makebog(username:String,map:scala.collection.mutable.Map[String,Int],s:Int): Map[Int,Int] ={
-    twitter.getUserTimeline(username, new Paging(s, 100)).foldLeft(Map.empty[Int, Int])((ma, x) => {
-      val tweet = x.getText.replaceAll("(\\w+?)://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-]+","")
+  def makebog(username:String,map:scala.collection.mutable.Map[String,Int],s:Int,obj:Boolean): Map[Int,Int] ={
+    val twts = twitter.getUserTimeline(username, new Paging(s, 100))
+    if(obj){
+      objtwts = twts
+    }
+    twts.foldLeft(Map.empty[Int, Int])((ma, x) => {
+      val tweet = x.getText.replaceAll("(\\w+?)://[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-]+","").replaceAll("@[\\w/:%#\\$&\\?\\(\\)~\\.=\\+\\-]+","")
       val tokens = tagger.analyze(tweet, new java.util.ArrayList[Token]())
       val docmap = tokens.foldLeft(Map.empty[Int, Int])((konomap, tok) => {
         if(tok.getMorpheme.getPartOfSpeech.contains("名詞")) {
@@ -340,12 +469,12 @@ object core {
     wordcount.toSeq.sortWith(_._2 > _._2).foreach(println)
   }
 
-  def twittertopic(username : String): Unit ={
+  /*def twittertopic(username : String): Unit ={
     val newFile = new File(username)
       //println(s.getText)
     newFile.mkdir() //成功すればtrue, 失敗すればfalseが返る。
     for(num<-(1 to 10)) {
-      val statuses=twitter.getUserTimeline(username, new Paging(num, 100))
+      val statuses=twitter.getUserTimeline(username, new Paging(num, 200))
       for(s<-statuses) {
         //println(s.getText)
         //val f = new File("output.txt")
@@ -359,7 +488,7 @@ object core {
       trend.foreach(x=>println(x.getName))
       println(trends)
       LDA.main(Array("--dir", "./"+username+"/","--numTopics","2","0.1"))
-  }
+  }*/
 
   def twitlistupdate(username : String): Unit ={
     val twitter = TwitterFactory.getSingleton
