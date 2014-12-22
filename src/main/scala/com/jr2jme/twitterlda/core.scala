@@ -37,16 +37,6 @@ object core {
 
 
   def main(args:Array[String]): Unit ={
-    /*val tweets = getusertweet("renho_sha")
-    println(tweets.length)
-    val dicmap = readdic_kobayashi()
-
-    tweets.foreach(s=>{
-
-      if(s.getText.contains("消費税")) {
-        println(getnegaposi(s, dicmap) + s.getText)
-      }
-    })*/
     twitter.setOAuthConsumer(botkey.consumer,botkey.conssecret)
     val accessToken = new AccessToken(botkey.token,botkey.tokensecret)
     twitter.setOAuthAccessToken(accessToken)
@@ -54,6 +44,9 @@ object core {
     tagger.addFilter(ctFillter)
     ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
     tagger.addFilter(ctFillter)
+
+
+
 
     //hdplda(twitlda("JME_KH"))
     //hdplda(twitlda("renho_sha"))
@@ -71,7 +64,7 @@ object core {
     }) )
     lines.foreach(s=>{
       if(s!="") {
-        twitsearch(s)
+        getusertweet(s)
       }
     })
   }
@@ -178,38 +171,26 @@ object core {
   }
 
 
-  def getusertweet(username:String): ResponseList[Status] ={
+  def getusertweet(username:String): Seq[Status] ={
 
-    //(1 to 10).fold(Seq.empty[ResponseList[Status]])((pnumber,list)=> list:+twitter.getUserTimeline(username, new Paging(1, 100)))
-    var tweets:ResponseList[Status]=null
-    for(s<-(1 to 10)) {
-      if(tweets==null){
-        tweets=twitter.getUserTimeline(username, new Paging(s, 100))
-      }
-      else{
-        twitter.getUserTimeline(username, new Paging(s, 100)).foreach(x=>tweets.add(x))
-      }
-    }
+    val tweets = (1 to 16).foldLeft(Seq.empty[Status])((list,pnumber)=> {
+      list++twitter.getUserTimeline(username, new Paging(pnumber, 200)).toSeq
+    })
+
+    val newFile = new File(username)
+    newFile.mkdir()
+
+    tweets.foreach(tw=>{
+      val out = new PrintWriter("./"+username+"/"+tw.getId.toString)
+      out.println(tw)
+      out.close()
+    })
+    println("fin")
     tweets
-  }
-  def gettogepage():Unit = {
-   /* val urlori="http://togetter.com/api/moreTweets/"+742165
-    val http = new Http
-    val request = url(urlori)
-    val requestWithParams =
-      request
-        .POST
-        .addParameter("page", "1")
-        .addParameter("key", "")
-    val req = :/("api.tumblr.com") / "v2" / "blog" / "pab-tech.tumblr.com" / "avatar"
-    //val handler = req >>> new java.io.FileOutputStream("cat.png")
-    http(requestWithParams)
-*/
-
   }
 
   def hdplda(maaa:Map[String,Int]): Unit ={
-    val niter: Int = 50
+    val niter: Int = 200
     val niterq: Int = 10
     val filebase: String = "twitter/twitter"
     // file or synthetic
