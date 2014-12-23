@@ -58,7 +58,7 @@ object core {
         println(s.getId)
       })
     }*/
-    print("input=")
+    /*print("input=")
     val lines = Iterator.continually(readLine()).takeWhile((s=>{
       s!=null&&s!=""
     }) )
@@ -66,7 +66,8 @@ object core {
       if(s!="") {
         getusertweet(s)
       }
-    })
+    })*/
+    twitterstream()
   }
 
   def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={
@@ -570,7 +571,7 @@ object core {
     //val trends = twitter.getPlaceTrends(23424856)
     //val trend=trends.getTrends
     //val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
-    val qe = Array("amazon")
+    //val qe = Array("")
 
     val builder = new ConfigurationBuilder()
     builder.setOAuthConsumerKey(mykey.consumer)
@@ -587,10 +588,11 @@ object core {
     twitterStream.addListener(new Listener())
 
     val filter = new FilterQuery()
-    filter.track(qe)
-    filter.language(Array("ja"))
+    //filter.track(qe)
+    //filter.language(Array("ja"))
     // 実行
-    twitterStream.filter(filter)
+    //twitterStream.filter(filter)
+    twitterStream.sample()
   }
 
   def md5hash(str:String): Unit ={
