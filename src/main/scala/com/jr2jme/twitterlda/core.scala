@@ -20,6 +20,8 @@ import twitter4j._
 import twitter4j.auth.AccessToken
 import org.knowceans.topics.simple.{TopicMatrixPanel, IldaGibbs}
 
+import scala.xml.XML
+
 object core {
   val twitter = TwitterFactory.getSingleton
   val tagger = SenFactory.getStringTagger(null)
@@ -44,10 +46,6 @@ object core {
     tagger.addFilter(ctFillter)
     ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
     tagger.addFilter(ctFillter)
-
-
-
-
     //hdplda(twitlda("JME_KH"))
     //hdplda(twitlda("renho_sha"))
     /*var page = new Paging(1,200,1L)
@@ -58,25 +56,50 @@ object core {
         println(s.getId)
       })
     }*/
-    /*print("input=")
+    print("input=")
     val lines = Iterator.continually(readLine()).takeWhile((s=>{
       s!=null&&s!=""
     }) )
     lines.foreach(s=>{
       if(s!="") {
-        getusertweet(s)
+        //getusertweet(s)
+        twitidf(s)
       }
-    })*/
-    twitterstream()
+    })
+    //twitterstream()
   }
 
+  def makefilelist(dir:String): Unit ={
+    val out = new PrintWriter("./2014-12-23")
+
+    new File(dir).listFiles.foreach(file=>{
+      //val xml=XML.loadFile(file.getPath)
+      //println(xml)
+      out.println(file.getPath)
+    })
+    out.close()
+  }
+
+  def twitidf(date:String): Unit ={
+    open(date) { f =>
+      def loop():Unit ={
+
+        var line = f.readLine  // 一行ずつ読む
+        while(line != null){  // nullが返ると読み込み終了
+        // use read data here
+          println(XML.loadFile(line).text) 
+          line = f.readLine
+        }
+      }
+      loop
+    }
+  }
   def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={
     lstat.foldLeft((Map.empty[Status,Map[String,Int]],idf))((ddd,st)=> {
       var wordset = Set.empty[String]
       val tokens = tagger.analyze(st.getText, new java.util.ArrayList[Token]())
       val twitmap = tokens.foldLeft(Map.empty[String,Int],ddd._2)((konomap, tok) => {
         val word = tok.getSurface
-
         if(!wordset.contains(word)){
           wordset = wordset+word
           (konomap._1 + (word -> (konomap._1.getOrElse(word, 0) + 1)),konomap._2+(word->(konomap._2.getOrElse(word,0)+1)))
