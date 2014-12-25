@@ -63,7 +63,23 @@ object core {
     lines.foreach(s=>{
       if(s!="") {
         //getusertweet(s)
-        twitidf(s)
+        //twitidf(s)
+        val tweets = getusertweet(s,false).toList
+        val twcount = twitcount(tweets,Map.empty[String,Int])
+        val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
+          cw.foldLeft(map)((minimap,ho)=>{
+            minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
+          })
+        })
+
+        val topictweets = tweets.filter(st=>st.getText.contains("消費税"))
+          topictweets
+          topictweets.foreach(st=>{
+          val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
+            taka+koba
+          })
+          getnegaposi(st,mixdic,)
+        })
       }
     })
     //twitterstream()
@@ -195,7 +211,7 @@ object core {
   }
 
 
-  def getusertweet(username:String): Seq[Status] ={
+  def getusertweet(username:String,outfile:Boolean): Seq[Status] ={
 
     val tweets = (1 to 16).foldLeft(Seq.empty[Status])((list,pnumber)=> {
       list++twitter.getUserTimeline(username, new Paging(pnumber, 200)).toSeq
@@ -203,12 +219,13 @@ object core {
 
     val newFile = new File(username)
     newFile.mkdir()
-
-    tweets.foreach(tw=>{
-      val out = new PrintWriter("./"+username+"/"+tw.getId.toString)
-      out.println(tw)
-      out.close()
-    })
+    if(outfile) {
+      tweets.foreach(tw => {
+        val out = new PrintWriter("./" + username + "/" + tw.getId.toString)
+        out.println(tw)
+        out.close()
+      })
+    }
     println("fin")
     tweets
   }
