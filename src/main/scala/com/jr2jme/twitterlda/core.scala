@@ -66,26 +66,39 @@ object core {
         //twitidf(s)
         val tweets = getusertweet(s,false).toList
         val twcount = twitcount(tweets,Map.empty[String,Int])
-        val topictweetcount = twcount._1.filter(_._1.getText.contains("消費税"))
+        val topictweetcount = tweets.filter(_.getText.contains("消費税")).filter(!_.isRetweet)
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
           })
         })*/
-        val topictweets = topictweetcount.keySet
-        topictweets.foreach(st=>{
+        //val topictweets = topictweetcount.keySet
+        val seqnp=topictweetcount.foldLeft(Seq.empty[Double])((se,st)=>{
           val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
             taka+koba
           })
-          println(negaposi(st,mixdic,twcount._2))
+          se :+ negaposi(st,mixdic,twcount._2)
         })
+        println(topictweetcount(changepoint(seqnp,3)).getText)
       }
     })
     //twitterstream()
   }
 
-  def changepoint(se:Seq[Double]):Unit= {
-    val avg = se.sum/se.length.toDouble
+  def changepoint(se:Seq[Double],depth:Int):Int= {
+    //if (depth != 0) {
+      val avg = se.sum / se.length.toDouble
+      val sx = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+(ss.sum+va-avg))
+      val sxabs = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+va.abs)
+      val sdiff = sx.max-sx.min
+      var index = -1
+    println(sxabs.indexWhere(_==sxabs.max)+"/"+sx.length)
+      sxabs.indexWhere(_==sxabs.max)
+
+    //}
+   // else {
+   //     0
+   // }
   }
 
   def makefilelist(dir:String): Unit ={
@@ -106,7 +119,7 @@ object core {
         var line = f.readLine  // 一行ずつ読む
         while(line != null){  // nullが返ると読み込み終了
         // use read data here
-          println(XML.loadFile(line).text) 
+          println(XML.loadFile(line).text)
           line = f.readLine
         }
       }
