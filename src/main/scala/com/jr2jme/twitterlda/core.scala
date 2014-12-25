@@ -66,23 +66,26 @@ object core {
         //twitidf(s)
         val tweets = getusertweet(s,false).toList
         val twcount = twitcount(tweets,Map.empty[String,Int])
-        val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
+        val topictweetcount = twcount._1.filter(_._1.getText.contains("消費税"))
+        /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
           })
-        })
-
-        val topictweets = tweets.filter(st=>st.getText.contains("消費税"))
-          topictweets
-          topictweets.foreach(st=>{
+        })*/
+        val topictweets = topictweetcount.keySet
+        topictweets.foreach(st=>{
           val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
             taka+koba
           })
-          getnegaposi(st,mixdic,)
+          println(negaposi(st,mixdic,twcount._2))
         })
       }
     })
     //twitterstream()
+  }
+
+  def changepoint(se:Seq[Double]):Unit= {
+    val avg = se.sum/se.length.toDouble
   }
 
   def makefilelist(dir:String): Unit ={
@@ -110,7 +113,7 @@ object core {
       loop
     }
   }
-  def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={
+  def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={//idf数えるようと個々のツイートに対する単語出現回数
     lstat.foldLeft((Map.empty[Status,Map[String,Int]],idf))((ddd,st)=> {
       var wordset = Set.empty[String]
       val tokens = tagger.analyze(st.getText, new java.util.ArrayList[Token]())
@@ -143,7 +146,7 @@ object core {
   }
 
 
-  def getnegaposi(tweet:Status,dicmap:Map[String,Double],phi:Array[Array[Double]],topic:Int,wordmap:Map[String,Int]) : Double = {
+  /*def getnegaposi(tweet:Status,dicmap:Map[String,Double],phi:Array[Array[Double]],topic:Int,wordmap:Map[String,Int]) : Double = {
     val text = tweet.getText
     val tagger = SenFactory.getStringTagger(null)
     val ctFillter = new CompositeTokenFilter
@@ -160,7 +163,29 @@ object core {
         va + (dicmap.getOrElse(tok.getSurface, 0d))
       }//0でないやつの数を数えたい
     })
+  }*/
+
+  def negaposi(tweet:Status,dicmap:Map[String,Double],wordmap:Map[String,Int]) : Double = {
+    val text = tweet.getText
+    val tagger = SenFactory.getStringTagger(null)
+    val ctFillter = new CompositeTokenFilter
+    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
+    tagger.addFilter(ctFillter)
+    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
+    tagger.addFilter(ctFillter)
+    val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
+    tokens.foldLeft(0d)((va,tok)=>{
+      if(wordmap.contains(tok.getSurface)) {
+        //println("logidf="+Math.log(wordmap.getOrElse(tok.getSurface, 1).toDouble))
+        va + (dicmap.getOrElse(tok.getSurface, 0d) /Math.log((wordmap.getOrElse(tok.getSurface, 1).toDouble+1d)))
+
+      }
+      else{
+        va + (dicmap.getOrElse(tok.getSurface, 0d))
+      }//0でないやつの数を数えたい
+    })
   }
+
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
     //for(line <- Source.fromFile("").getLines) {println(line)}
     var map=Map.empty[String,Double]
@@ -352,7 +377,7 @@ object core {
           val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
             taka+koba
           })
-          println(getnegaposi(j._1,mixdic,phi,j._2,maaa))//map[Map[Status,Double]]
+          //println(getnegaposi(j._1,mixdic,phi,j._2,maaa))//map[Map[Status,Double]]
         }
       }
       println
