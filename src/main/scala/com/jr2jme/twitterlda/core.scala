@@ -64,11 +64,11 @@ object core {
       if(s!="") {
         //getusertweet(s)
         //twitidf(s)
-        val tweets = getusertweet(s,true).toList.reverse
+        val tweets = getusertweet(s,false).toList.reverse
 
-        /*val twcount = twitcount(tweets,Map.empty[String,Int])
+        val twcount = twitcount(tweets,Map.empty[String,Int])
         val topictweetcount = tweets.filter(_.getText.contains("消費税")).filter(!_.isRetweet)
-        topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
+        //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
@@ -81,33 +81,36 @@ object core {
           })
           se :+ negaposi(st,mixdic,twcount._2)
         })
-        val ikkai = changepoint(seqnp,3)
+        changepoint(seqnp,topictweetcount,3)
 
-        println(topictweetcount(ikkai))
-        val spl = seqnp.splitAt(ikkai+1)
-        println(topictweetcount(changepoint(spl._1,1)))
-        val ikkai2=changepoint(spl._2,1)
-        val spl2 = seqnp.splitAt(ikkai2+1)
-        println(topictweetcount(changepoint(spl2._1,1)+spl._1.length))
-        println(topictweetcount(changepoint(spl2._2,1)+spl2._1.length+spl._1.length))*/
       }
     })
     //twitterstream()
   }
 
-  def changepoint(se:Seq[Double],depth:Int):Int= {
-    //if (depth != 0) {
-      val avg = se.sum / se.length.toDouble
-      val sx = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+(ss.sum+va-avg))
-      val sxabs = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+va.abs)
-      val sdiff = sx.max-sx.min
-      println(sxabs.max)
-      sxabs.indexOf(sxabs.max)
-
-    //}
-   // else {
-   //     0
-   // }
+  def changepoint(se:Seq[Double],lista:List[Status],depth:Int):Unit= {
+    if (depth != 0) {
+      if(se.length!=0) {
+        val avg = se.sum / se.length.toDouble
+        var tmp=0d
+        val sf = se.foldLeft(Seq.empty[Double])((ss,va) => ss :+ (va - avg))
+        //sf.foreach(println)/
+        val sx = sf.foldLeft(Seq.empty[Double])((ss,va) =>{
+          val ttt = tmp
+          tmp = va
+          ss :+ (ttt +va)
+        })
+        val sxabs = sx.foldLeft(Seq.empty[Double])((ss, va) => ss :+ va.abs)
+        //sxabs.foreach(println)
+        val sdiff = sx.max - sx.min
+        val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
+        val spst = lista.splitAt(kekka._1.length)
+        println(lista(sxabs.indexOf(sxabs.max)).getText)
+        changepoint(kekka._1, spst._1, depth - 1)
+        changepoint(kekka._2, spst._2, depth - 1)
+        sxabs.indexOf(sxabs.max)
+      }
+    }
   }
 
   def makefilelist(dir:String): Unit ={
@@ -196,7 +199,7 @@ object core {
     ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
     tagger.addFilter(ctFillter)
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
-    tokens.foldLeft(0d)((va,tok)=>{
+    val np =tokens.foldLeft(0d)((va,tok)=>{
       if(wordmap.contains(tok.getSurface)) {
         //println("logidf="+Math.log(wordmap.getOrElse(tok.getSurface, 1).toDouble))
         va + (dicmap.getOrElse(tok.getSurface, 0d) /Math.log((wordmap.getOrElse(tok.getSurface, 1).toDouble+1d)))
@@ -206,6 +209,7 @@ object core {
         va + (dicmap.getOrElse(tok.getSurface, 0d))
       }//0でないやつの数を数えたい
     })
+    np/tokens.length
   }
 
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
