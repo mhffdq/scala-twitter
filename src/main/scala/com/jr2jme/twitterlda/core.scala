@@ -64,9 +64,11 @@ object core {
       if(s!="") {
         //getusertweet(s)
         //twitidf(s)
-        val tweets = getusertweet(s,false).toList
-        val twcount = twitcount(tweets,Map.empty[String,Int])
+        val tweets = getusertweet(s,true).toList.reverse
+
+        /*val twcount = twitcount(tweets,Map.empty[String,Int])
         val topictweetcount = tweets.filter(_.getText.contains("消費税")).filter(!_.isRetweet)
+        topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
@@ -79,7 +81,15 @@ object core {
           })
           se :+ negaposi(st,mixdic,twcount._2)
         })
-        println(topictweetcount(changepoint(seqnp,3)).getText)
+        val ikkai = changepoint(seqnp,3)
+
+        println(topictweetcount(ikkai))
+        val spl = seqnp.splitAt(ikkai+1)
+        println(topictweetcount(changepoint(spl._1,1)))
+        val ikkai2=changepoint(spl._2,1)
+        val spl2 = seqnp.splitAt(ikkai2+1)
+        println(topictweetcount(changepoint(spl2._1,1)+spl._1.length))
+        println(topictweetcount(changepoint(spl2._2,1)+spl2._1.length+spl._1.length))*/
       }
     })
     //twitterstream()
@@ -91,9 +101,8 @@ object core {
       val sx = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+(ss.sum+va-avg))
       val sxabs = se.foldLeft(Seq.empty[Double])((ss,va)=>ss:+va.abs)
       val sdiff = sx.max-sx.min
-      var index = -1
-    println(sxabs.indexWhere(_==sxabs.max)+"/"+sx.length)
-      sxabs.indexWhere(_==sxabs.max)
+      println(sxabs.max)
+      sxabs.indexOf(sxabs.max)
 
     //}
    // else {
