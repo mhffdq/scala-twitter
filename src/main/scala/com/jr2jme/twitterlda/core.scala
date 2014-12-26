@@ -67,7 +67,7 @@ object core {
         val tweets = getusertweet(s,false).toList.reverse
 
         val twcount = twitcount(tweets,Map.empty[String,Int])
-        val topictweetcount = tweets.filter(_.getText.contains("消費税")).filter(!_.isRetweet)
+        val topictweetcount = tweets.filter(_.getText.contains("STAP")).filter(!_.isRetweet)
         //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
@@ -81,7 +81,7 @@ object core {
           })
           se :+ negaposi(st,mixdic,twcount._2)
         })
-        changepoint(seqnp,topictweetcount,3)
+        changepoint(seqnp,topictweetcount,2)
 
       }
     })
