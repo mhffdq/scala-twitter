@@ -68,7 +68,7 @@ object core {
 
         val twcount = twitcount(tweets,Map.empty[String,Int])
         val topictweetcount = tweets.filter(_.getText.contains("STAP")).filter(!_.isRetweet)
-        //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
+        topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
