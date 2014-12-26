@@ -81,7 +81,7 @@ object core {
           })
           se :+ negaposi(st,mixdic,twcount._2)
         })
-        changepoint(seqnp,topictweetcount,2)
+        changepoint(seqnp,topictweetcount,1)
 
       }
     })
@@ -268,9 +268,10 @@ object core {
       list++twitter.getUserTimeline(username, new Paging(pnumber, 200)).toSeq
     })
 
-    val newFile = new File(username)
-    newFile.mkdir()
+
     if(outfile) {
+      val newFile = new File(username)
+      newFile.mkdir()
       tweets.foreach(tw => {
         val out = new PrintWriter("./" + username + "/" + tw.getId.toString)
         out.println(tw)
