@@ -68,7 +68,7 @@ object core {
 
         val twcount = twitcount(tweets,Map.empty[String,Int])
         val topictweetcount = tweets.filter(_.getText.contains("STAP")).filter(!_.isRetweet)
-        topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
+        //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
         /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
           cw.foldLeft(map)((minimap,ho)=>{
             minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
@@ -76,14 +76,19 @@ object core {
         })*/
         //val topictweets = topictweetcount.keySet
         val seqnp=topictweetcount.foldLeft(Seq.empty[Double])((se,st)=>{
-          val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
+          /*val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
             taka+koba
-          })
-          se :+ negaposi(st,mixdic,twcount._2)
+          })*/
+          println(st.getText)
+          val vvv = negaposi(st,readdic_kobayashi_mei(),twcount._2)
+          println(vvv)
+          se :+ vvv
         })
         changepoint(seqnp,topictweetcount,1)
 
+
       }
+
     })
     //twitterstream()
   }
@@ -97,7 +102,7 @@ object core {
         //sf.foreach(println)/
         val sx = sf.foldLeft(Seq.empty[Double])((ss,va) =>{
           val ttt = tmp
-          tmp = va
+          tmp = ttt+va
           ss :+ (ttt +va)
         })
         val sxabs = sx.foldLeft(Seq.empty[Double])((ss, va) => ss :+ va.abs)
@@ -252,6 +257,39 @@ object core {
             1
           }
           map=map+(linearray(1).split(" ")(0)->atai)
+          line=f.readLine()
+        }
+        map
+      }
+      loop
+    }
+    map
+  }
+
+  def readdic_kobayashi_mei(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
+  //for(line <- Source.fromFile("").getLines) {println(line)}
+  var map=Map.empty[String,Double]
+    open("pn.csv.m3.120408.trim") { f =>
+      def loop():Map[String,Double] ={
+
+        var line = f.readLine  // 一行ずつ読む
+        while(line != null){  // nullが返ると読み込み終了
+        // use read data here
+        val linearray=line.split("\t")
+          //println(linearray(0)+" : "+linearray(3))
+          //println(map.size)
+          //println(linearray(1))
+          val word=linearray(0)
+          val atai = if(linearray(1)=="e"){
+            0
+          }
+          else if(linearray(1)=="p"){
+            1
+          }
+          else{
+            -1
+          }
+          map=map+(word->atai)
           line=f.readLine()
         }
         map
