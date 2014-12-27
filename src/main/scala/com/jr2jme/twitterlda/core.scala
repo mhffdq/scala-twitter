@@ -64,6 +64,7 @@ object core {
       //twitidf(s)
       val tweets = getusertweet(s,false).toList.reverse
       val word = lines.next()
+      val setuser = twitsearch(word).foldLeft(Set.empty[String])((se,st)=>se+st.getUser.getScreenName)
       val twcount = twitcount(tweets,Map.empty[String,Int])
       val topictweetcount = tweets.filter(_.getText.contains(word)).filter(!_.isRetweet)
       //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
@@ -161,12 +162,12 @@ object core {
     val query = new Query
     query.setQuery(word)
     var ser = twitter.search(query)
-    println(ser)
+    //println(ser)
     ser.getTweets.foreach(s=>println(s))
     while(ser.nextQuery()!=null){
       ser = twitter.search(ser.nextQuery())
       ser.getTweets.foreach(s=>println(s.getText))
-      println(ser.getRefreshURL)
+      //println(ser.getRefreshURL)
     }
     ser.getTweets.toList
   }
