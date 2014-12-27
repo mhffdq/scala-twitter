@@ -64,7 +64,6 @@ object core {
       //twitidf(s)
       val tweets = getusertweet(s,false).toList.reverse
       val word = lines.next()
-      val setuser = twitsearch(word).foldLeft(Set.empty[String])((se,st)=>se+st.getUser.getScreenName)
       val twcount = twitcount(tweets,Map.empty[String,Int])
       val topictweetcount = tweets.filter(_.getText.contains(word)).filter(!_.isRetweet)
       //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
