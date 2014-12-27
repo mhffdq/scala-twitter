@@ -57,39 +57,35 @@ object core {
       })
     }*/
     print("input=")
-    val lines = Iterator.continually(readLine()).takeWhile((s=>{
-      s!=null&&s!=""
-    }) )
-    lines.foreach(s=>{
-      if(s!="") {
-        //getusertweet(s)
-        //twitidf(s)
-        val tweets = getusertweet(s,false).toList.reverse
-
-        val twcount = twitcount(tweets,Map.empty[String,Int])
-        val topictweetcount = tweets.filter(_.getText.contains("STAP")).filter(!_.isRetweet)
-        //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
-        /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
-          cw.foldLeft(map)((minimap,ho)=>{
-            minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
-          })
-        })*/
-        //val topictweets = topictweetcount.keySet
-        val seqnp=topictweetcount.foldLeft(Seq.empty[Double])((se,st)=>{
-          /*val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
-            taka+koba
-          })*/
-          println(st.getText)
-          val vvv = negaposi(st,readdic_kobayashi_mei(),twcount._2)
-          println(vvv)
-          se :+ vvv
+    val lines = Source.stdin.getLines()
+    val s = lines.next()
+    if(s!="") {
+      //getusertweet(s)
+      //twitidf(s)
+      val tweets = getusertweet(s,false).toList.reverse
+      val word = lines.next()
+      val twcount = twitcount(tweets,Map.empty[String,Int])
+      val topictweetcount = tweets.filter(_.getText.contains(word)).filter(!_.isRetweet)
+      //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
+      /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
+        cw.foldLeft(map)((minimap,ho)=>{
+          minimap+(ho._1->(ho._2+minimap.getOrElse(ho._1,0)))
         })
-        changepoint(seqnp,topictweetcount,1)
+      })*/
+      //val topictweets = topictweetcount.keySet
+      val seqnp=topictweetcount.foldLeft(Seq.empty[Double])((se,st)=>{
+        /*val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
+          taka+koba
+        })*/
+        println(st.getText)
+        val vvv = negaposi(st,readdic_kobayashi_mei(),twcount._2)
+        println(vvv)
+        se :+ vvv
+      })
+      changepoint(seqnp,topictweetcount,1)
 
 
-      }
-
-    })
+    }
     //twitterstream()
   }
 
@@ -110,7 +106,7 @@ object core {
         val sdiff = sx.max - sx.min
         val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
         val spst = lista.splitAt(kekka._1.length)
-        println(lista(sxabs.indexOf(sxabs.max)).getText)
+        println(lista(sxabs.indexOf(sxabs.max)+1).getText)
         changepoint(kekka._1, spst._1, depth - 1)
         changepoint(kekka._2, spst._2, depth - 1)
         sxabs.indexOf(sxabs.max)
