@@ -78,7 +78,7 @@ object core {
           taka+koba
         })*/
         println(st.getText)
-        val vvv = negaposi(st,readdic_kobayashi_mei(),twcount._2)
+        val vvv = negaposi(st,readdic_kobayashi_mei(),readdic_kobayashi_you(),twcount._2)
         println(vvv)
         se :+ vvv
       })
@@ -86,6 +86,42 @@ object core {
 
 
     }
+    /*val text ="このままでは恰好がつかない"
+    val dicyou = readdic_kobayashi_you()
+    val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
+    var va = 0d
+    for(i <- (0 to tokens.length-1)) {
+      val tok = tokens.get(i)
+      val word = if (tok.getMorpheme.getBasicForm == "*") tok.getSurface else tok.getMorpheme.getBasicForm
+      var check = true
+      if (dicyou.contains(word)) {
+        val se = dicyou.get(word).get
+        var j = 1
+        var fil = se
+        var loop = true
+        while (check && loop) {
+          if (i + j <= tokens.length - 1) {
+            val tt = tokens.get(i + j)
+            var wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
+            fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
+            if (fil.size == 1) {
+              if (fil.toSeq(0).length == j + 2) {
+                va += (fil.toSeq(0).last.toInt )
+                println("OK" + fil.toSeq(0))
+                println(fil.toSeq(0).last.toInt)
+                check = false
+              }
+            } else if (fil.size == 0) {
+              loop = false
+            }
+            j += 1
+          } else {
+            loop = false
+          }
+        }
+      }
+    }*/
+
     //twitterstream()
   }
 
@@ -191,26 +227,52 @@ object core {
     })
   }*/
 
-  def negaposi(tweet:Status,dicmap:Map[String,Double],wordmap:Map[String,Int]) : Double = {
+  def negaposi(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
     val text = tweet.getText
-    val tagger = SenFactory.getStringTagger(null)
-    val ctFillter = new CompositeTokenFilter
-    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
-    tagger.addFilter(ctFillter)
-    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
-    tagger.addFilter(ctFillter)
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
-    val np =tokens.foldLeft(0d)((va,tok)=>{
-      if(wordmap.contains(tok.getSurface)) {
-        //println("logidf="+Math.log(wordmap.getOrElse(tok.getSurface, 1).toDouble))
-        va + (dicmap.getOrElse(tok.getSurface, 0d) /Math.log((wordmap.getOrElse(tok.getSurface, 1).toDouble+1d)))
-
+    var va = 0d
+    for(i <- (0 to tokens.length-1)){
+      val tok = tokens.get(i)
+      val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
+      var check = true
+      if(wordmap.contains(word)) {
+        if(dicyou.contains(word)){
+          val se = dicyou.get(word).get
+          var j = 1
+          var fil = se
+          var loop = true
+          while(check&&loop){
+            if(i+j<=tokens.length-1) {
+              val tt = tokens.get(i + j)
+              var wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
+              fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
+              if (fil.size == 1) {
+                if(fil.toSeq(0).length==j+2) {
+                  va += (fil.toSeq(0).last.toInt )
+                  println("OK" + fil.toSeq(0))
+                  check = false
+                }
+              }else if(fil.size==0){
+                loop = false
+              }
+              j+=1
+            }else{
+              loop = false
+            }
+          }
+          if(check){
+            va += (dicmap.getOrElse(word, 0d))
+          }
+        }else {
+          va += (dicmap.getOrElse(word, 0d) )
+        }
       }
       else{
-        va + (dicmap.getOrElse(tok.getSurface, 0d))
-      }//0でないやつの数を数えたい
-    })
-    np/tokens.length
+        va += (dicmap.getOrElse(word, 0d))
+      }
+    }
+    
+    va
   }
 
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
@@ -234,12 +296,12 @@ object core {
     }
   map
   }
-  def readdic_kobayashi(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
+  def readdic_kobayashi_you(): Map[String,Set[Seq[String]]] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
   //for(line <- Source.fromFile("").getLines) {println(line)}
-  var map=Map.empty[String,Double]
+  var map=Map.empty[String,Set[Seq[String]]]
+    ""::1::Nil
     open("wago.121808.pn") { f =>
-      def loop():Map[String,Double] ={
-
+      def loop():Map[String,Set[Seq[String]]] ={
         var line = f.readLine  // 一行ずつ読む
         while(line != null){  // nullが返ると読み込み終了
         // use read data here
@@ -252,7 +314,8 @@ object core {
           }else{
             1
           }
-          map=map+(linearray(1).split(" ")(0)->atai)
+          val ren = linearray(1).split(" ")
+          map=map+(ren(0)->(map.getOrElse(ren(0),Set.empty[Seq[String]])+(linearray(1).split(" ").toSeq:+atai.toString)))
           line=f.readLine()
         }
         map
@@ -435,9 +498,7 @@ object core {
       if(i!=null) {
         for (j <- i) {
           println(j._1.getCreatedAt+j._1.getText)
-          val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
-            taka+koba
-          })
+
           //println(getnegaposi(j._1,mixdic,phi,j._2,maaa))//map[Map[Status,Double]]
         }
       }
