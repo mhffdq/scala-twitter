@@ -82,7 +82,7 @@ object core {
         println(vvv)
         se :+ vvv
       })
-      changepoint(seqnp,topictweetcount,1)
+      changepoint(seqnp,topictweetcount)
 
 
     }
@@ -125,48 +125,47 @@ object core {
     //twitterstream()
   }
 
-  def changepoint(se:Seq[Double],lista:List[Status],depth:Int):Unit= {
-    if (depth != 0) {
-      if(se.length>1) {
-        val avg = se.sum / se.length.toDouble
-        var tmp=0d
-        val sf = se.foldLeft(Seq.empty[Double])((ss,va) => ss :+ (va - avg))
-        //sf.foreach(println)/
-        val sx = sf.foldLeft(Seq.empty[Double])((ss,va) =>{
-          val ttt = tmp
-          tmp = ttt+va
-          ss :+ (ttt +va)
-        })
-        val sxabs = sx.foldLeft(Seq.empty[Double])((ss, va) => ss :+ va.abs)
-        //sxabs.foreach(println)
-        val sdiff = sx.max - sx.min
-        var couzen = 0
-        var couok = 0
-        for(r<-(1 to 100)){
-          var tm = 0d
-          val persf = scala.util.Random.shuffle(sf)
-          if(!persf.equals(sf)) {
-            couzen+=1
-            val sxz = persf.foldLeft(Seq.empty[Double])((ss, va) => {
-              val ttt = tm
-              tm = ttt + va
-              ss :+ (ttt + va)
-            })
-            val sxdiff = sxz.max - sxz.min
-            if(sdiff>sxdiff){
-              couok+=1
-            }
+  def changepoint(se:Seq[Double],lista:List[Status]):Unit= {
+    if(se.length>1) {
+      val avg = se.sum / se.length.toDouble
+      var tmp=0d
+      val sf = se.foldLeft(Seq.empty[Double])((ss,va) => ss :+ (va - avg))
+      //sf.foreach(println)/
+      val sx = sf.foldLeft(Seq.empty[Double])((ss,va) =>{
+        val ttt = tmp
+        tmp = ttt+va
+        ss :+ (ttt +va)
+      })
+      val sxabs = sx.foldLeft(Seq.empty[Double])((ss, va) => ss :+ va.abs)
+      //sxabs.foreach(println)
+      val sdiff = sx.max - sx.min
+      var couzen = 0d
+      var couok = 0d
+      for(r<-(1 to 100)){
+        var tm = 0d
+        val persf = scala.util.Random.shuffle(sf)
+        if(!persf.equals(sf)) {
+          couzen+=1d
+          val sxz = persf.foldLeft(Seq.empty[Double])((ss, va) => {
+            val ttt = tm
+            tm = ttt + va
+            ss :+ (ttt + va)
+          })
+          val sxdiff = sxz.max - sxz.min
+          if(sdiff>sxdiff){
+            couok+=1d
           }
         }
-        println("confok="+couok+"confzen="+couzen)
-        if(couok/couzen>0.7){
-          val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
-          val spst = lista.splitAt(kekka._1.length)
-          println(lista(sxabs.indexOf(sxabs.max)+1).getText)
-          changepoint(kekka._1, spst._1, depth - 1)
-          changepoint(kekka._2, spst._2, depth - 1)
-          sxabs.indexOf(sxabs.max)
-        }
+      }
+      println("conf="+couok+"confzen="+couzen)
+      if((couok/couzen)>0.7){
+        val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
+        val spst = lista.splitAt(kekka._1.length)
+        println(lista(sxabs.indexOf(sxabs.max)+1).getText)
+        changepoint(kekka._1, spst._1)
+        changepoint(kekka._2, spst._2)
+        sxabs.indexOf(sxabs.max)
+
       }
     }
   }
@@ -253,11 +252,16 @@ object core {
     val text = tweet.getText
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
     var va = 0d
+    var count =0
     for(i <- (0 to tokens.length-1)){
       val tok = tokens.get(i)
       val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
       var check = true
+
       if(wordmap.contains(word)) {
+        if(dicyou.contains(word)||dicmap.contains(word)){
+          count+=1
+        }
         if(dicyou.contains(word)){
           val se = dicyou.get(word).get
           var j = 1
@@ -293,8 +297,11 @@ object core {
         va += (dicmap.getOrElse(word, 0d))
       }
     }
-
-    va/tokens.length
+    if(count!=0) {
+      va / tokens.length
+    }else{
+      0d
+    }
   }
 
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
