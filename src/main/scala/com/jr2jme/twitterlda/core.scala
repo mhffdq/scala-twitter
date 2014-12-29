@@ -152,7 +152,7 @@ object core {
             ss :+ (ttt + va)
           })
           val sxdiff = sxz.max - sxz.min
-          if(sdiff>sxdiff){
+          if(sdiff>=sxdiff){
             couok+=1d
           }
         }
@@ -161,12 +161,10 @@ object core {
       if((couok/couzen)>0.7){
         val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
         val spst = lista.splitAt(kekka._1.length)
-        println(lista(sxabs.indexOf(sxabs.max)+1).getText)
         changepoint(kekka._1, spst._1)
         changepoint(kekka._2, spst._2)
-        sxabs.indexOf(sxabs.max)
-
       }
+      println(lista(sxabs.indexOf(sxabs.max)+1).getText)
     }
   }
 
@@ -298,7 +296,7 @@ object core {
       }
     }
     if(count!=0) {
-      va / tokens.length
+      va / count
     }else{
       0d
     }
@@ -389,8 +387,7 @@ object core {
 
 
   def getusertweet(username:String,outfile:Boolean): Seq[Status] ={
-
-    val tweets = (1 to 16).foldLeft(Seq.empty[Status])((list,pnumber)=> {
+    val tweets = (1 to 16).foldLeft(Seq.empty[Status])((list,pnumber)=> {//Sinceとか使うように
       list++twitter.getUserTimeline(username, new Paging(pnumber, 200)).toSeq
     })
 
