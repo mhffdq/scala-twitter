@@ -140,15 +140,37 @@ object core {
         val sxabs = sx.foldLeft(Seq.empty[Double])((ss, va) => ss :+ va.abs)
         //sxabs.foreach(println)
         val sdiff = sx.max - sx.min
-        val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
-        val spst = lista.splitAt(kekka._1.length)
-        println(lista(sxabs.indexOf(sxabs.max)+1).getText)
-        changepoint(kekka._1, spst._1, depth - 1)
-        changepoint(kekka._2, spst._2, depth - 1)
-        sxabs.indexOf(sxabs.max)
+        var couzen = 0
+        var couok = 0
+        for(r<-(1 to 100)){
+          var tm = 0d
+          val persf = scala.util.Random.shuffle(sf)
+          if(!persf.equals(sf)) {
+            couzen+=1
+            val sxz = persf.foldLeft(Seq.empty[Double])((ss, va) => {
+              val ttt = tm
+              tm = ttt + va
+              ss :+ (ttt + va)
+            })
+            val sxdiff = sxz.max - sxz.min
+            if(sdiff>sxdiff){
+              couok+=1
+            }
+          }
+        }
+        println("confok="+couok+"confzen="+couzen)
+        if(couok/couzen>0.7){
+          val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
+          val spst = lista.splitAt(kekka._1.length)
+          println(lista(sxabs.indexOf(sxabs.max)+1).getText)
+          changepoint(kekka._1, spst._1, depth - 1)
+          changepoint(kekka._2, spst._2, depth - 1)
+          sxabs.indexOf(sxabs.max)
+        }
       }
     }
   }
+
 
   def makefilelist(dir:String): Unit ={
     val out = new PrintWriter("./2014-12-23")
