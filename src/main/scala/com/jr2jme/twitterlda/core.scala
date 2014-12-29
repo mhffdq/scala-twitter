@@ -227,24 +227,61 @@ object core {
   }
 
 
-  /*def getnegaposi(tweet:Status,dicmap:Map[String,Double],phi:Array[Array[Double]],topic:Int,wordmap:Map[String,Int]) : Double = {
-    val text = tweet.getText
-    val tagger = SenFactory.getStringTagger(null)
-    val ctFillter = new CompositeTokenFilter
-    ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
-    tagger.addFilter(ctFillter)
-    ctFillter.readRules(new BufferedReader(new StringReader("記号-アルファベット")))
-    tagger.addFilter(ctFillter)
+  def getnegaposi_teian(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
+   val text = tweet.getText
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
-    tokens.foldLeft(0d)((va,tok)=>{
-      if(topic != -1&&wordmap.contains(tok.getSurface)) {
-        va + (dicmap.getOrElse(tok.getSurface, 0d)/(-Math.log(phi(topic)(wordmap.getOrElse(tok.getSurface, 1)))))
+    var va = 0d
+    var count =0
+    for(i <- (0 to tokens.length-1)){
+      val tok = tokens.get(i)
+      val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
+      var check = true
+
+      if(wordmap.contains(word)) {
+        if(dicyou.contains(word)||dicmap.contains(word)){
+          count+=1
+        }
+        if(dicyou.contains(word)){
+          val se = dicyou.get(word).get
+          var j = 1
+          var fil = se
+          var loop = true
+          while(check&&loop){
+            if(i+j<=tokens.length-1) {
+              val tt = tokens.get(i + j)
+              val wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
+              fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
+              if (fil.size == 1) {
+                if(fil.toSeq(0).length==j+2) {
+                  va += fil.toSeq(0).last.toInt
+                  println("OK" + fil.toSeq(0))
+                  check = false
+                }
+              }else if(fil.size==0){
+                loop = false
+              }
+              j+=1
+            }else{
+              loop = false
+            }
+          }
+          if(check){
+            va += (dicmap.getOrElse(word, 0d))
+          }
+        }else {
+          va += (dicmap.getOrElse(word, 0d) )
+        }
       }
       else{
-        va + (dicmap.getOrElse(tok.getSurface, 0d))
-      }//0でないやつの数を数えたい
-    })
-  }*/
+        va += (dicmap.getOrElse(word, 0d))
+      }
+    }
+    if(count!=0) {
+      va / count
+    }else{
+      0d
+    }
+  }
 
   def negaposi(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
     val text = tweet.getText
