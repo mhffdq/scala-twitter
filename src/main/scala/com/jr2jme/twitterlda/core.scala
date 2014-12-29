@@ -272,7 +272,7 @@ object core {
       }
     }
 
-    va
+    va/tokens.length
   }
 
   def readdic_takamura(): Map[String,Double] ={//http://www.lr.pi.titech.ac.jp/~takamura/pndic_ja.html
