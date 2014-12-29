@@ -127,7 +127,7 @@ object core {
 
   def changepoint(se:Seq[Double],lista:List[Status],depth:Int):Unit= {
     if (depth != 0) {
-      if(se.length!=0) {
+      if(se.length>1) {
         val avg = se.sum / se.length.toDouble
         var tmp=0d
         val sf = se.foldLeft(Seq.empty[Double])((ss,va) => ss :+ (va - avg))
@@ -244,7 +244,7 @@ object core {
           while(check&&loop){
             if(i+j<=tokens.length-1) {
               val tt = tokens.get(i + j)
-              var wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
+              val wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
               fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
               if (fil.size == 1) {
                 if(fil.toSeq(0).length==j+2) {
@@ -271,7 +271,7 @@ object core {
         va += (dicmap.getOrElse(word, 0d))
       }
     }
-    
+
     va
   }
 
