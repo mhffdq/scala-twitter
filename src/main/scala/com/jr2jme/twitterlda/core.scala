@@ -274,7 +274,7 @@ object core {
               fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
               if (fil.size == 1) {
                 if(fil.toSeq(0).length==j+2) {
-                  va += (fil.toSeq(0).last.toInt )
+                  va += fil.toSeq(0).last.toInt
                   println("OK" + fil.toSeq(0))
                   check = false
                 }
