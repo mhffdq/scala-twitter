@@ -292,7 +292,7 @@ object core {
       val tok = tokens.get(i)
       val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
       var check = true
-      print(tok.getSurface)
+      print(tok.getSurface+" ")
       if(wordmap.contains(word)) {
         if(dicyou.contains(word)||dicmap.contains(word)){
           count+=1
