@@ -228,6 +228,7 @@ object core {
 
 
   def getnegaposi_teian(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
+
    val text = tweet.getText
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
     var va = 0d
@@ -283,7 +284,13 @@ object core {
     }
   }
 
+  def kaomoji(text:String):Unit={//記号の部分をこれに渡す感じで
+    val reg ="""(*)"""
+    text.
+  }
+
   def negaposi(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
+    println(tweet)
     val text = tweet.getText
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
     var va = 0d
