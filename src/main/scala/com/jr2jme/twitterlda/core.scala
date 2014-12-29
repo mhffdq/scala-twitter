@@ -77,7 +77,7 @@ object core {
         /*val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
           taka+koba
         })*/
-        println(st.getText)
+        //println(st.getText)
         val vvv = negaposi(st,readdic_kobayashi_mei(),readdic_kobayashi_you(),twcount._2)
         println(vvv)
         se :+ vvv
@@ -253,7 +253,7 @@ object core {
               fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
               if (fil.size == 1) {
                 if(fil.toSeq(0).length==j+2) {
-                  va += fil.toSeq(0).last.toInt
+                  va += fil.toSeq(0).last.toInt.toDouble
                   println("OK" + fil.toSeq(0))
                   check = false
                 }
@@ -292,7 +292,7 @@ object core {
       val tok = tokens.get(i)
       val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
       var check = true
-
+      print(tok.getSurface)
       if(wordmap.contains(word)) {
         if(dicyou.contains(word)||dicmap.contains(word)){
           count+=1
@@ -309,8 +309,7 @@ object core {
               fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
               if (fil.size == 1) {
                 if(fil.toSeq(0).length==j+2) {
-                  va += fil.toSeq(0).last.toInt
-                  println("OK" + fil.toSeq(0))
+                  va += fil.toSeq(0).last.toInt.toDouble
                   check = false
                 }
               }else if(fil.size==0){
@@ -332,6 +331,7 @@ object core {
         va += (dicmap.getOrElse(word, 0d))
       }
     }
+    println()
     if(count!=0) {
       va / count
     }else{
