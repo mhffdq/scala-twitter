@@ -10,7 +10,9 @@ resolvers ++= Seq(
 libraryDependencies ++= Seq(
   "org.mongodb" %% "casbah" % "2.7.3",
   "com.novus" %% "salat" % "1.9.9",
-  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2"
+  "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
+  "org.slf4j" % "slf4j-api" % "1.7.5",
+  "org.slf4j" % "slf4j-simple" % "1.7.5"
 )
 
 unmanagedBase := baseDirectory.value / "../../jar"

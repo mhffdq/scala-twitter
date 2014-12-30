@@ -78,7 +78,7 @@ object core {
           taka+koba
         })*/
         //println(st.getText)
-        val vvv = negaposi(st,readdic_kobayashi_mei(),readdic_kobayashi_you(),twcount._2)
+        val vvv = teian.getnegaposi_kyori(st,word)
         println(vvv)
         se :+ vvv
       })
@@ -87,40 +87,10 @@ object core {
 
     }
     /*val text ="このままでは恰好がつかない"
-    val dicyou = readdic_kobayashi_you()
-    val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
-    var va = 0d
-    for(i <- (0 to tokens.length-1)) {
-      val tok = tokens.get(i)
-      val word = if (tok.getMorpheme.getBasicForm == "*") tok.getSurface else tok.getMorpheme.getBasicForm
-      var check = true
-      if (dicyou.contains(word)) {
-        val se = dicyou.get(word).get
-        var j = 1
-        var fil = se
-        var loop = true
-        while (check && loop) {
-          if (i + j <= tokens.length - 1) {
-            val tt = tokens.get(i + j)
-            var wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
-            fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
-            if (fil.size == 1) {
-              if (fil.toSeq(0).length == j + 2) {
-                va += (fil.toSeq(0).last.toInt )
-                println("OK" + fil.toSeq(0))
-                println(fil.toSeq(0).last.toInt)
-                check = false
-              }
-            } else if (fil.size == 0) {
-              loop = false
-            }
-            j += 1
-          } else {
-            loop = false
-          }
-        }
-      }
-    }*/
+
+    println(teian.getnegaposi_kyori(twitter.showStatus(s.toLong),"ユニバーサル"))*/
+    //teian.read_kaomoji(s)
+
 
     //twitterstream()
   }
@@ -141,7 +111,7 @@ object core {
       val sdiff = sx.max - sx.min
       var couzen = 0d
       var couok = 0d
-      for(r<-(1 to 100)){
+      for(r<-(1 to 1000)){
         var tm = 0d
         val persf = scala.util.Random.shuffle(sf)
         if(!persf.equals(sf)) {
@@ -158,13 +128,14 @@ object core {
         }
       }
       println("conf="+couok+"confzen="+couzen)
+      println(lista(sxabs.indexOf(sxabs.max)+1).getText)
       if((couok/couzen)>0.7){
         val kekka = se.splitAt(sxabs.indexOf(sxabs.max)+1)
         val spst = lista.splitAt(kekka._1.length)
         changepoint(kekka._1, spst._1)
         changepoint(kekka._2, spst._2)
       }
-      println(lista(sxabs.indexOf(sxabs.max)+1).getText)
+
     }
   }
 
@@ -227,56 +198,59 @@ object core {
   }
 
 
-  def getnegaposi_teian(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
-
-   val text = tweet.getText
+  def getnegaposi_teian(tweet:Status) : Double = {
+    val dicmap = readdic_kobayashi_mei()
+    val dicyou = readdic_kobayashi_you()
+    val text = tweet.getText
     val tokens = tagger.analyze(text,new java.util.ArrayList[Token]())
     var va = 0d
     var count =0
-    for(i <- (0 to tokens.length-1)){
+    for(i <- (0 to tokens.length-1)) {
       val tok = tokens.get(i)
-      val word = if(tok.getMorpheme.getBasicForm=="*")tok.getSurface else tok.getMorpheme.getBasicForm
+      val word = if (tok.getMorpheme.getBasicForm == "*") tok.getSurface else tok.getMorpheme.getBasicForm
       var check = true
 
-      if(wordmap.contains(word)) {
-        if(dicyou.contains(word)||dicmap.contains(word)){
-          count+=1
-        }
-        if(dicyou.contains(word)){
-          val se = dicyou.get(word).get
-          var j = 1
-          var fil = se
-          var loop = true
-          while(check&&loop){
-            if(i+j<=tokens.length-1) {
-              val tt = tokens.get(i + j)
-              val wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
-              fil = fil.filter(s=>s(j) == wor||s(j) == tt.getSurface)
-              if (fil.size == 1) {
-                if(fil.toSeq(0).length==j+2) {
-                  va += fil.toSeq(0).last.toInt.toDouble
-                  println("OK" + fil.toSeq(0))
-                  check = false
-                }
-              }else if(fil.size==0){
-                loop = false
+      if (dicyou.contains(word) || dicmap.contains(word)) {
+        count += 1
+      }
+      if (dicyou.contains(word)) {
+        val se = dicyou.get(word).get
+        var j = 1
+        var fil = se
+        var loop = true
+        while (check && loop) {
+          if (i + j <= tokens.length - 1) {
+            val tt = tokens.get(i + j)
+            val wor = if (tt.getMorpheme.getBasicForm == "*") tt.getSurface else tt.getMorpheme.getBasicForm
+            fil = fil.filter(s => s(j) == wor || s(j) == tt.getSurface)
+            if (fil.size == 1) {
+              if (fil.toSeq(0).length == j + 2) {
+                va += fil.toSeq(0).last.toInt.toDouble
+                println("OK" + fil.toSeq(0))
+                check = false
               }
-              j+=1
-            }else{
+            } else if (fil.size == 0) {
               loop = false
             }
+            j += 1
+          } else {
+            loop = false
           }
-          if(check){
-            va += (dicmap.getOrElse(word, 0d))
-          }
-        }else {
-          va += (dicmap.getOrElse(word, 0d) )
         }
-      }
-      else{
-        va += (dicmap.getOrElse(word, 0d))
+        if (check) {
+          val atai = dicmap.getOrElse(word, 0d)
+          va += (atai)
+          print(tok)
+          print(atai+" ")
+        }
+      } else {
+        val atai = dicmap.getOrElse(word, 0d)
+        va += (atai)
+        print(tok)
+        print(atai+" ")
       }
     }
+
     if(count!=0) {
       va / count
     }else{
@@ -285,8 +259,8 @@ object core {
   }
 
   def kaomoji(text:String):Unit={//記号の部分をこれに渡す感じで
-    val reg ="""(*)"""
-    text.
+    val reg ="""(.*?)"""
+    //text.
   }
 
   def negaposi(tweet:Status,dicmap:Map[String,Double],dicyou:Map[String,Set[Seq[String]]],wordmap:Map[String,Int]) : Double = {
