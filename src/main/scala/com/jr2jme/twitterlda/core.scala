@@ -1,6 +1,7 @@
 package com.jr2jme.twitterlda
 
 import java.util.Random
+import scala.collection.mutable
 import scala.io.Source
 import scala.math
 import chalk.topics.LDA
@@ -56,12 +57,10 @@ object core {
         println(s.getId)
       })
     }*/
-    print("input=")
+    /*print("input=")
     val lines = Source.stdin.getLines()
     val s = lines.next()
     if(s!="") {
-      //getusertweet(s)
-      //twitidf(s)
       val tweets = getusertweet(s,false).toList.reverse
       val word = lines.next()
       val twcount = twitcount(tweets,Map.empty[String,Int])
@@ -77,22 +76,32 @@ object core {
         /*val mixdic = readdic_kobayashi().foldLeft(readdic_takamura())((taka,koba)=>{
           taka+koba
         })*/
-        //println(st.getText)
-        val vvv = teian.getnegaposi_kyori(st,word)
+        println(st.getText)
+        val vvv = teian.getnegaposi_gyou(st.getText,word)
         println(vvv)
         se :+ vvv
       })
       changepoint(seqnp,topictweetcount)
 
 
-    }
-    /*val text ="このままでは恰好がつかない"
-
-    println(teian.getnegaposi_kyori(twitter.showStatus(s.toLong),"ユニバーサル"))*/
+    }*/
+    val text ="USJか、寒々楽しみ"
+    //val tweets=twitsearch(text)
+    //println(teian.getnegaposi_gyou(text,"ユニバーサル"))
+    //val tw=teian.doujiuse(tweets)
+    //tw.toSeq.sortWith(_._2 > _._2).foreach(s=>println(s._1))//普通に使われる単語を下げる*/
     //teian.read_kaomoji(s)
+    /*val tweets=twitsearch(s)
+    val tw=teian.doujiuse(tweets)
+    val idflist=makefilelist("stream/2014-12-31")
+    val idf=teian.idfuse(idflist)
+    val tfidf = teian.tfidf(tw,idf)
+    tfidf.toSeq.sortWith(_._2 > _._2).foreach(s=>println(s._1+ " " +s._2))*/
+    makefilelist("C:\\Users\\Hirotaka\\IdeaProjects\\2014-12-24")
+  }
 
+  def getsample(): Unit ={
 
-    //twitterstream()
   }
 
   def changepoint(se:Seq[Double],lista:List[Status]):Unit= {
@@ -141,14 +150,16 @@ object core {
 
 
   def makefilelist(dir:String): Unit ={
-    val out = new PrintWriter("./2014-12-23")
-
+    val out = new PrintWriter("./2014-12-24")
+    //val stlist =mutable.MutableList.empty[String]
     new File(dir).listFiles.foreach(file=>{
-      //val xml=XML.loadFile(file.getPath)
-      //println(xml)
+      val xml=XML.loadFile(file.getPath)
+      //stlist+=xml.text
       out.println(file.getPath)
     })
+
     out.close()
+    //stlist.toList
   }
 
   def twitidf(date:String): Unit ={
@@ -186,14 +197,12 @@ object core {
     println("searching")
     val query = new Query
     query.setQuery(word)
+    query.setCount(200)
     var ser = twitter.search(query)
     //println(ser)
-    ser.getTweets.foreach(s=>println(s))
-    while(ser.nextQuery()!=null){
-      ser = twitter.search(ser.nextQuery())
-      ser.getTweets.foreach(s=>println(s.getText))
+    ser = twitter.search(ser.nextQuery())
       //println(ser.getRefreshURL)
-    }
+    //ser.getTweets.foreach(println)
     ser.getTweets.toList
   }
 
@@ -816,7 +825,7 @@ object core {
     val twitterStream = new TwitterStreamFactory(conf).getInstance()
 
     // Listenerを登録
-    twitterStream.addListener(new Listener())
+    twitterStream.addListener(new IdfListener(twitterStream))
 
     val filter = new FilterQuery()
     //filter.track(qe)
