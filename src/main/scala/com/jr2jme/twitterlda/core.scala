@@ -85,7 +85,7 @@ object core {
 
 
     }*/
-    val text ="USJか、寒々楽しみ"
+    //val text ="USJか、寒々楽しみ"
     //val tweets=twitsearch(text)
     //println(teian.getnegaposi_gyou(text,"ユニバーサル"))
     //val tw=teian.doujiuse(tweets)
@@ -97,9 +97,8 @@ object core {
     val idf=teian.idfuse(idflist)
     val tfidf = teian.tfidf(tw,idf)
     tfidf.toSeq.sortWith(_._2 > _._2).foreach(s=>println(s._1+ " " +s._2))*/
-    makefilelist("C:\\Users\\Hirotaka\\IdeaProjects\\2014-12-24")
+    //makefilelist("C:\\Users\\Hirotaka\\IdeaProjects\\2014-12-24")
   }
-
   def getsample(): Unit ={
 
   }
