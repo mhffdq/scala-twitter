@@ -169,15 +169,20 @@ object teian {
     nnnppp
   }
 
-  def idfuse(listat:List[String]): Map[String,Double] ={//共起？検索単語と一緒に使われやすさを求める
-    val aaa = listat.foldLeft(Map.empty[String,Double])((map,st)=> {
+  def dfuse(listat:List[String],word:String): (Map[String,Double],Map[String,Double]) ={//共起？検索単語と一緒に使われやすさを求める
+    var couse = Map.empty[String,Double]
+    val aaa = listat.foldLeft(Map.empty[String,Double])((map,list)=> {//Tscoreを求める準備
+      val st = XML.loadFile(list).text
       val tokens = core.tagger.analyze(st,new java.util.ArrayList[Token]())
       var se = Set.empty[String]
       val hh = tokens.foldLeft(map)((minima, minis) => {
         if(minis.getMorpheme.getPartOfSpeech.contains("名詞")){
           if(!se.contains(minis.getSurface)) {
+            if(st.contains(word)){
+              couse+(minis.getSurface->(couse.getOrElse(minis.getSurface,0d)+1d))
+            }
             se=se+minis.getSurface
-            minima + (minis.getSurface -> (minima.getOrElse(minis.getSurface, 0d) + 1d/listat.length.toDouble))
+            minima + (minis.getSurface -> (minima.getOrElse(minis.getSurface, 0d) + 1d))
           }
           else{
             minima
@@ -189,7 +194,7 @@ object teian {
       })
       hh
     })
-    aaa
+    ( aaa,couse)
   }
 
   def doujiuse(listat:List[Status]): Map[String,Double] ={//共起？検索単語と一緒に使われやすさを求める

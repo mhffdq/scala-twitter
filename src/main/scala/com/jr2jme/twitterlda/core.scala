@@ -57,13 +57,15 @@ object core {
         println(s.getId)
       })
     }*/
-    /*print("input=")
+
+    print("input=")
     val lines = Source.stdin.getLines()
     val s = lines.next()
     if(s!="") {
       val tweets = getusertweet(s,false).toList.reverse
       val word = lines.next()
       val twcount = twitcount(tweets,Map.empty[String,Int])
+      val idf=teian.couse(twitidf("2014-12-24"),word)
       val topictweetcount = tweets.filter(_.getText.contains(word)).filter(!_.isRetweet)
       //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
       /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
@@ -84,7 +86,7 @@ object core {
       changepoint(seqnp,topictweetcount)
 
 
-    }*/
+    }
     //val text ="USJか、寒々楽しみ"
     //val tweets=twitsearch(text)
     //println(teian.getnegaposi_gyou(text,"ユニバーサル"))
@@ -161,19 +163,22 @@ object core {
     //stlist.toList
   }
 
-  def twitidf(date:String): Unit ={
+  def twitidf(date:String): List[String] ={
+    var filelist = List.empty[String]
     open(date) { f =>
       def loop():Unit ={
 
         var line = f.readLine  // 一行ずつ読む
         while(line != null){  // nullが返ると読み込み終了
         // use read data here
+          filelist = filelist:+line
           println(XML.loadFile(line).text)
           line = f.readLine
         }
       }
       loop
     }
+    filelist
   }
   def twitcount(lstat:List[Status],idf:Map[String,Int]): (Map[Status,Map[String,Int]],Map[String,Int]) ={//idf数えるようと個々のツイートに対する単語出現回数
     lstat.foldLeft((Map.empty[Status,Map[String,Int]],idf))((ddd,st)=> {
