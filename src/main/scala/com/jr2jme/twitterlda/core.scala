@@ -65,7 +65,7 @@ object core {
       val tweets = getusertweet(s,false).toList.reverse
       val word = lines.next()
       val twcount = twitcount(tweets,Map.empty[String,Int])
-      val idf=teian.couse(twitidf("2014-12-24"),word)
+      val tscoremap=teian.dfuse(twitidf("2014-12-24"),word)//共起を求める(tscore)
       val topictweetcount = tweets.filter(_.getText.contains(word)).filter(!_.isRetweet)
       //topictweetcount.foreach(st=>println(topictweetcount.indexOf(st)+":"+st.getText))
       /*val df = twcount._1.values.foldLeft(Map.empty[String,Int])((map,cw)=>{
