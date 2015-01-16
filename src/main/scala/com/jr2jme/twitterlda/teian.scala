@@ -188,7 +188,7 @@ object teian {
   def dfuse(listat:List[String],word:String): Map[String,Double] ={//共起？検索単語と一緒に使われやすさを求める
     var couse = Map.empty[String,Double]//名詞の出現ツイート数，目的単語の出現ツイート数，共起ツイート数,ツイート数
     var obuse = 0d
-    val ssize=listat.size
+    val ssize=listat.size.toDouble
     val meisi = listat.foldLeft(Map.empty[String,Double])((map,list)=> {//Tscoreを求める準備
       val st = XML.loadFile(list).text
       if(st.contains(word)){
@@ -215,10 +215,11 @@ object teian {
       })
       hh
     })
+    val maxscore = Math.sqrt(obuse)*(1-(obuse/ssize))
     couse.foldLeft(Map.empty[String,Double])((scoremap,co)=>{
       val score = (co._2-obuse*meisi.getOrElse(co._1,0d)/ssize)/Math.sqrt(co._2)
       val sinscore = if(score>=2){
-        score
+        score/maxscore
       }else{
         0
       }

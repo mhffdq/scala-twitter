@@ -79,7 +79,7 @@ object core {
           taka+koba
         })*/
         println(st.getText)
-        val vvv = teian.getnegaposi_gyou(st.getText,word)
+        val vvv = teian.getnegaposi_gyou(st.getText,word,tscoremap)
         println(vvv)
         se :+ vvv
       })
@@ -811,7 +811,7 @@ object core {
 
   }
 
-  def twitterstream():Unit={
+  /*def twitterstream():Unit={
     //val trends = twitter.getPlaceTrends(23424856)
     //val trend=trends.getTrends
     //val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
@@ -837,7 +837,7 @@ object core {
     // 実行
     //twitterStream.filter(filter)
     twitterStream.sample()
-  }
+  }*/
 
   def md5hash(str:String): Unit ={
     val digester = MD.getInstance("MD5")
