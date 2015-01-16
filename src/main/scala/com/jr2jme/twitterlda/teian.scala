@@ -96,11 +96,12 @@ object teian {
     }
   }
 
-  def getnegaposi_gyou(text:String,sea:String) : Double = {//極性をもった単語が同じ行とかそういうのを見る
+  def getnegaposi_gyou(text:String,sea:String,meisiomomi:Map[String,Double]) : Double = {//極性をもった単語が同じ行とかそういうのを見る
     val p = text.indexOfSlice(sea)
     val sptexts=text.split("\n")
     var count =0
-    val nnnppp = sptexts.foldLeft(0d)((vvv,s)=>{
+    var zentairyou=0d
+    val nnnppp = sptexts.foldLeft(0d)((vvv,s)=>{//行ごとに処理
       val tokens = core.tagger.analyze(s,new java.util.ArrayList[Token]())
       var mae = 0
       var va = vvv
@@ -109,9 +110,17 @@ object teian {
           mae +=1
         }
       }
-      for(i <- (0 to tokens.length-1)) {
+      var maxmeisival = 0d
+      var meisiflag = false
+      for(i <- (0 to tokens.length-1)) {//単語ごとに処理
         val tok = tokens.get(i)
         val word = if (tok.getMorpheme.getBasicForm == "*") tok.getSurface else tok.getMorpheme.getBasicForm
+        if(tok.getMorpheme.getPartOfSpeech.contains("名詞")){
+          if(maxmeisival<meisiomomi.get(word).get){
+            maxmeisival=meisiomomi.get(word).get
+          }
+          meisiflag=true
+        }
         var check = true
         if (dicyou.contains(word)) {
           val se = dicyou.get(word).get
@@ -165,9 +174,15 @@ object teian {
         va
       }
       println(va+":"+count)
+      if(meisiflag) {
+        zentairyou+=maxmeisival
+        va * maxmeisival
+      }else{
+        zentairyou+=1
         va
+      }
     })
-    nnnppp
+    nnnppp/zentairyou
   }
 
   def dfuse(listat:List[String],word:String): Map[String,Double] ={//共起？検索単語と一緒に使われやすさを求める
