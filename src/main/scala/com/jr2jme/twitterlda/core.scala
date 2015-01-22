@@ -59,7 +59,7 @@ object core {
     }*/
 
     print("input=")
-    val lines = Source.stdin.getLines()
+    /*val lines = Source.stdin.getLines()
     val s = lines.next()
     if(s!="") {
       val tweets = getusertweet(s,false).toList.reverse
@@ -99,7 +99,8 @@ object core {
     val idf=teian.idfuse(idflist)
     val tfidf = teian.tfidf(tw,idf)
     tfidf.toSeq.sortWith(_._2 > _._2).foreach(s=>println(s._1+ " " +s._2))*/
-    //makefilelist("C:\\Users\\Hirotaka\\IdeaProjects\\2014-12-24")
+    //makefilelist("C:\\Users\\Hirotaka\\IdeaProjects\\2014-12-24")*/
+    twitstream()
   }
   def getsample(): Unit ={
 
@@ -811,7 +812,7 @@ object core {
 
   }
 
-  /*def twitterstream():Unit={
+  def twitstream():Unit={
     //val trends = twitter.getPlaceTrends(23424856)
     //val trend=trends.getTrends
     //val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
@@ -829,15 +830,16 @@ object core {
     val twitterStream = new TwitterStreamFactory(conf).getInstance()
 
     // Listenerを登録
-    twitterStream.addListener(new IdfListener(twitterStream))
+    twitterStream.addListener(new Listener())
 
     val filter = new FilterQuery()
-    //filter.track(qe)
-    //filter.language(Array("ja"))
+    val qe = Array("身代金")
+    filter.track(qe)
+    filter.language(Array("ja"))
     // 実行
-    //twitterStream.filter(filter)
-    twitterStream.sample()
-  }*/
+    twitterStream.filter(filter)
+    //twitterStream.sample()
+  }
 
   def md5hash(str:String): Unit ={
     val digester = MD.getInstance("MD5")

@@ -21,7 +21,7 @@ class Listener extends StatusAdapter {
       //val fileName = "./stream/"+status.getUser.getScreenName
       val cal = Calendar.getInstance()
       val date = cal.get(Calendar.YEAR)+"-"+(cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DATE)
-      val datedir = new File("stream/"+date)
+      val datedir = new File("身代金/"+date)
       datedir.mkdir()
       val fileName = "stream/"+date+"/"+status.getId
       val encode = "UTF-8"
