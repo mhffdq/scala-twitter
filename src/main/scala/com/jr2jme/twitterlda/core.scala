@@ -832,13 +832,13 @@ object core {
     // Listenerを登録
     twitterStream.addListener(new Listener())
 
-    val filter = new FilterQuery()
+    /*val filter = new FilterQuery()
     val qe = Array("身代金")
     filter.track(qe)
     filter.language(Array("ja"))
     // 実行
-    twitterStream.filter(filter)
-    //twitterStream.sample()
+    twitterStream.filter(filter)*/
+    twitterStream.sample()
   }
 
   def md5hash(str:String): Unit ={
