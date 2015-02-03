@@ -828,9 +828,9 @@ object core {
 
     // TwitterStreamのインスタンス作成
     val twitterStream = new TwitterStreamFactory(conf).getInstance()
-
+    val ls=new Listener()
     // Listenerを登録
-    twitterStream.addListener(new Listener())
+    twitterStream.addListener(ls)
 
     /*val filter = new FilterQuery()
     val qe = Array("身代金")
@@ -839,6 +839,15 @@ object core {
     // 実行
     twitterStream.filter(filter)*/
     twitterStream.sample()
+    def waitInput(c:Char) : Unit = {
+      c match {
+        case 'q' => /* 終了処理 */
+        case _ => waitInput(readChar) /* 他のキーだったら再び入力待ち */
+      }
+    }
+    waitInput(readChar)
+    ls.fin()
+    twitterStream.shutdown()
   }
 
   def md5hash(str:String): Unit ={
