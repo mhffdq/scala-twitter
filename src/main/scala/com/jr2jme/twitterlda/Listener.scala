@@ -27,7 +27,7 @@ class Listener extends StatusAdapter {
   // Tweetを受け取るたびにこのメソッドが呼び出される
   override def onStatus(status:Status):Unit= {
     val nowcal = Calendar.getInstance()
-    val nowdate = (cal.get(Calendar.YEAR)+"-"+(cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DATE))
+    val nowdate = (nowcal.get(Calendar.YEAR)+"-"+(nowcal.get(Calendar.MONTH)+1)+"-"+nowcal.get(Calendar.DATE))
     if(date!=nowdate){
       date = nowdate
       changedate(date)
