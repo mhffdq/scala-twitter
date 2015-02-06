@@ -20,7 +20,7 @@ class Listener extends StatusAdapter {
   var date = (cal.get(Calendar.YEAR)+"-"+(cal.get(Calendar.MONTH)+1)+"-"+cal.get(Calendar.DATE))
   val datedir = new File("stream/"+date)
   datedir.mkdir()
-  var fileName = "stream/"+date + "/"+date
+  var fileName = "stream/"+date + "/"+date+".xml"
   var fout = new PrintWriter(fileName)
   val sentou = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
   fout.println(sentou)
@@ -32,11 +32,11 @@ class Listener extends StatusAdapter {
       date = nowdate
       changedate(date)
     }
-    if(!status.isRetweeted&& !status.getText.contains("http") && status.getLang=="ja") {
+    if(status.getLang=="ja") {
       // 書き込み処理
-      val xmlst = "<tweetstatus user = \""+status.getUser.getScreenName+"\" date = \""+status.getCreatedAt+"\" id = \""+status.getId+"\">" +
+      val xmlst = "<tweetstatus user = \""+status.getUser.getScreenName+"\" date = \""+status.getCreatedAt+"\" id = \""+status.getId+"\" replyusername = \""+ status.getInReplyToScreenName+"\" retweetusername = \""+ (if(status.isRetweeted)status.getRetweetedStatus.getUser.getScreenName else "")+"\">" +
         status.getText+
-        "</tweetstatus>"
+        "</tweetstatus>"//リツイート元と返信先もとっておきたい
       fout.println(xmlst)
       //val xml = XML.loadString(xmlst)
       //println(xml.toString)
@@ -48,7 +48,7 @@ class Listener extends StatusAdapter {
     fout.close()
     val datedir = new File("stream/"+newdate)
     datedir.mkdir()
-    fileName = "stream/"+newdate + "/"+newdate
+    fileName = "stream/"+newdate + "/"+newdate+".xml"
     fout = new PrintWriter(fileName)
     fout.println(sentou)
   }
