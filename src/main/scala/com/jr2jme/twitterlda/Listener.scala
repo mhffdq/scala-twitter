@@ -22,7 +22,7 @@ class Listener extends StatusAdapter {
   datedir.mkdir()
   var fileName = "stream/"+date + "/"+date+".xml"
   var fout = new PrintWriter(fileName)
-  val sentou = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n"
+  val sentou = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<field>\n"
   fout.println(sentou)
   // Tweetを受け取るたびにこのメソッドが呼び出される
   override def onStatus(status:Status):Unit= {
@@ -45,6 +45,7 @@ class Listener extends StatusAdapter {
   }
 
   def changedate(newdate:String): Unit ={
+    fout.println("\n</field>")
     fout.close()
     val datedir = new File("stream/"+newdate)
     datedir.mkdir()
@@ -54,6 +55,7 @@ class Listener extends StatusAdapter {
   }
 
   def fin(): Unit ={
+    fout.println("\n</field>")
     fout.close
   }
 }
