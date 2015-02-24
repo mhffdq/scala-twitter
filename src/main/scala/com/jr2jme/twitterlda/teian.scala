@@ -20,7 +20,7 @@ object teian {
   val dicyou = core.readdic_kobayashi_you()
   var idflist:List[Status]=null
 
-  def getnegaposi_kyori(text:String,sea:String) : Double = {
+  /*def getnegaposi_kyori(text:String,sea:String) : Double = {
     val p = text.indexOfSlice(sea)
     val tokens = core.tagger.analyze(text,new java.util.ArrayList[Token]())
     var mae = 0
@@ -94,11 +94,15 @@ object teian {
     }else{
       0d
     }
-  }
+  }*/
 
   def getnegaposi_gyou(text:String,sea:String,meisiomomi:Map[String,Double]) : Double = {//極性をもった単語が同じ行とかそういうのを見る
     val p = text.indexOfSlice(sea)
-    val sptexts=text.split("\n")
+    val sptexts=text.split("\n|。")
+    /*sptexts.foldLeft(Seq.empty[String])((se,gyou)=>{
+      gyou.s
+    })*/
+
     var count =0
     var zentairyou=0d
     val nnnppp = sptexts.foldLeft(0d)((vvv,s)=>{//行ごとに処理
