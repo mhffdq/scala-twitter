@@ -63,7 +63,7 @@ object core {
     }*/
 
     print("input=")
-    listtofileperuser("faledo")
+    twitstreamapril()
     /*val lines = Source.stdin.getLines()
     val s = lines.next()
     if(s!="") {
@@ -864,6 +864,52 @@ object core {
 
 
   }
+
+  def twitstreamapril():Unit={
+    //val trends = twitter.getPlaceTrends(23424856)
+    //val trend=trends.getTrends
+    //val qe = trend.foldLeft(Array.empty[String])((arr,tren)=>arr :+ tren.getName)
+    //val qe = Array("")
+
+    val builder = new ConfigurationBuilder()
+    builder.setOAuthConsumerKey(mykey.consumer)
+    builder.setOAuthConsumerSecret(mykey.conssecret)
+    builder.setOAuthAccessToken(mykey.token)
+    builder.setOAuthAccessTokenSecret(mykey.tokensecret)
+
+    val conf = builder.build()
+
+    val memlis = twitter.getUserListMembers(200617138,-1)
+    var memmmm = memlis.foldLeft(List.empty[Long])((lis,mem)=>{
+      mem.getId::lis
+    })
+    val memlis2 = twitter.getUserListMembers(200617138,memlis.getNextCursor)
+    memmmm = memmmm:::memlis2.foldLeft(List.empty[Long])((lis,mem)=>{
+      mem.getId::lis
+    })
+    // TwitterStreamのインスタンス作成
+    val twitterStream = new TwitterStreamFactory(conf).getInstance()
+    val ls=new ListenerApril(memmmm)
+    // Listenerを登録
+    twitterStream.addListener(ls)
+
+    val filter = new FilterQuery()
+    val qe = memmmm.toArray
+    filter.follow(qe)
+    // 実行
+    twitterStream.filter(filter)
+    //twitterStream.sample()
+    def waitInput(c:Char) : Unit = {
+      c match {
+        case 'q' => /* 終了処理 */
+        case _ => waitInput(readChar) /* 他のキーだったら再び入力待ち */
+      }
+    }
+    waitInput(readChar)
+    ls.fin()
+    twitterStream.shutdown()
+  }
+
 
   def twitstream():Unit={
     //val trends = twitter.getPlaceTrends(23424856)
