@@ -12,7 +12,9 @@ libraryDependencies ++= Seq(
   "com.novus" %% "salat" % "1.9.9",
   "net.databinder.dispatch" %% "dispatch-core" % "0.11.2",
   "org.slf4j" % "slf4j-api" % "1.7.5",
-  "org.slf4j" % "slf4j-simple" % "1.7.5"
+  "org.slf4j" % "slf4j-simple" % "1.7.5",
+  "org.json4s" %% "json4s-native" % "3.2.11",
+  "org.scalatest" %% "scalatest" % "2.1.3" % "test"
 )
 
 unmanagedBase := baseDirectory.value / "../../jar"

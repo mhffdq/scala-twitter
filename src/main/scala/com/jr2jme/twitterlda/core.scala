@@ -1,6 +1,8 @@
 package com.jr2jme.twitterlda
 
 import java.util.Random
+import com.jr2jme.twitterlda.twitetrstatus
+
 import scala.collection.mutable
 import scala.io.Source
 import scala.math
@@ -19,7 +21,8 @@ import net.java.sen.SenFactory
 import net.java.sen.filter.stream.CompositeTokenFilter
 import twitter4j._
 import twitter4j.auth.AccessToken
-import org.knowceans.topics.simple.{TopicMatrixPanel, IldaGibbs}
+import org.json4s._
+import org.json4s.native.JsonMethods._
 
 import scala.xml.XML
 
@@ -28,6 +31,7 @@ object core {
   val tagger = SenFactory.getStringTagger(null)
   val ctFillter = new CompositeTokenFilter
   var objtwts:ResponseList[Status] = null
+
 
   def open(fileName:String)(body:BufferedReader => Unit) : Unit = {
     // ディスクへの細かなアクセスを避けるため、バッファを介してファイルを読む
@@ -40,8 +44,8 @@ object core {
 
 
   def main(args:Array[String]): Unit ={
-    twitter.setOAuthConsumer(botkey.consumer,botkey.conssecret)
-    val accessToken = new AccessToken(botkey.token,botkey.tokensecret)
+    twitter.setOAuthConsumer(ofkey.consumer,ofkey.conssecret)
+    val accessToken = new AccessToken(ofkey.token,ofkey.tokensecret)
     twitter.setOAuthAccessToken(accessToken)
     ctFillter.readRules(new BufferedReader(new StringReader("名詞-数")))
     tagger.addFilter(ctFillter)
@@ -59,7 +63,8 @@ object core {
     }*/
 
     print("input=")
-    val lines = Source.stdin.getLines()
+    listtofileperuser("faledo")
+    /*val lines = Source.stdin.getLines()
     val s = lines.next()
     if(s!="") {
       val tweets = getusertweet(s,false).toList.reverse
@@ -435,7 +440,7 @@ object core {
     tweets
   }
 
-  def hdplda(maaa:Map[String,Int]): Unit ={
+  /*def hdplda(maaa:Map[String,Int]): Unit ={
     val niter: Int = 200
     val niterq: Int = 10
     val filebase: String = "twitter/twitter"
@@ -562,7 +567,7 @@ object core {
       println
       count+=1
     }
-  }
+  }*/
 
   /*def wordweight(wordmap:Map[String,Int],phi:Array[Array[Double]]): Map[String,Array[Double]] ={
     wordmap.foldLeft(Map.empty[String,Double])((ma,i)=>{
@@ -714,6 +719,57 @@ object core {
       println(trends)
       LDA.main(Array("--dir", "./"+username+"/","--numTopics","2","0.1"))
   }*/
+
+  def listtofile(listname:String):Unit={
+    //println(twitter.getUserLists("faledo"))
+    var page = new Paging(1,100)
+    val newnew = new twitetrstatus()
+    //var stlist = List.empty[Status]
+    var sss = twitter.getUserListStatuses(200617138,page).toList
+    var statuss = List.empty[Status]
+    while(sss.length!=0){
+      sss = twitter.getUserListStatuses(200617138,page).toList
+      statuss = statuss:::sss
+      page.setPage(page.getPage+1)
+    }
+    newnew.tofile(statuss)
+    //println(statuss)
+
+  }
+  def listtofileperuser(listname:String):Unit={
+    //println(twitter.getUserLists("faledo"))
+    val memlis = twitter.getUserListMembers(200617138,-1)
+    for (mem <- memlis){
+      var page = new Paging(1,100)
+      val newnew = new twitetrstatus()
+      //var stlist = List.empty[Status]
+      var sss = twitter.getUserTimeline(mem.getId,page).toList
+      var statuss = List.empty[Status]
+      while(sss.length!=0){
+        sss = twitter.getUserTimeline(mem.getId,page).toList
+        statuss = statuss:::sss
+        page.setPage(page.getPage+1)
+      }
+      newnew.tofilepeuser(statuss,mem.getName)
+    }
+    val memlis2 = twitter.getUserListMembers(200617138,memlis.getNextCursor)
+    for (mem <- memlis2){
+      var page = new Paging(1,100)
+      val newnew = new twitetrstatus()
+      //var stlist = List.empty[Status]
+      var sss = twitter.getUserTimeline(mem.getId,page).toList
+      var statuss = List.empty[Status]
+      while(sss.length!=0){
+        sss = twitter.getUserTimeline(mem.getId,page).toList
+        statuss = statuss:::sss
+        page.setPage(page.getPage+1)
+      }
+      newnew.tofilepeuser(statuss,mem.getName)
+    }
+
+  }
+
+  def 
 
   def twitlistupdate(username : String): Unit ={
     val twitter = TwitterFactory.getSingleton
