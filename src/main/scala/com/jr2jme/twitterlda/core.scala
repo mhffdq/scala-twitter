@@ -740,7 +740,7 @@ object core {
     //println(twitter.getUserLists("faledo"))
     val memlis = twitter.getUserListMembers(200617138,-1)
     for (mem <- memlis){
-      var page = new Paging(1,100)
+      var page = new Paging(1,200)
       val newnew = new twitetrstatus()
       //var stlist = List.empty[Status]
       var sss = twitter.getUserTimeline(mem.getId,page).toList
@@ -754,7 +754,7 @@ object core {
     }
     val memlis2 = twitter.getUserListMembers(200617138,memlis.getNextCursor)
     for (mem <- memlis2){
-      var page = new Paging(1,100)
+      var page = new Paging(1,200)
       val newnew = new twitetrstatus()
       //var stlist = List.empty[Status]
       var sss = twitter.getUserTimeline(mem.getId,page).toList
@@ -769,7 +769,6 @@ object core {
 
   }
 
-  def 
 
   def twitlistupdate(username : String): Unit ={
     val twitter = TwitterFactory.getSingleton
